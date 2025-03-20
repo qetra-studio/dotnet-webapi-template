@@ -12,35 +12,27 @@ public static class DependencyContainerFixtureExtensions
 		Action<IServiceProvider, TService>? configure = null,
 		object[]? args = null) where TService : class
 		=> fixture
-			.ConfigureServices(services =>
+			.ConfigureServices(services => services.Replace(ServiceDescriptor.Singleton(sp =>
 			{
-				services.Replace(ServiceDescriptor.Singleton(sp =>
-				{
-					var mock = Substitute.For<TService>(args ?? []);
-					configure?.Invoke(sp, mock);
-					return mock;
-				}));
-			});
+				var mock = Substitute.For<TService>(args ?? []);
+				configure?.Invoke(sp, mock);
+				return mock;
+			})));
 
 	public static DependencyContainerFixture ReplaceWithMock<TService>(
 		this DependencyContainerFixture fixture,
 		TService instance) where TService : class
 		=> fixture
-			.ConfigureServices(services =>
-			{
-				services.Replace(ServiceDescriptor.Singleton(instance));
-			});
+			.ConfigureServices(services => services.Replace(ServiceDescriptor.Singleton(instance)));
 
 	public static DependencyContainerFixture ReplaceWithMock<TService>(
 		this DependencyContainerFixture fixture,
 		Action<TService>? configure = null,
 		object[]? args = null) where TService : class
-		=> fixture
-			.ReplaceWithMock<TService>((_, mock) => configure?.Invoke(mock), args);
+		=> fixture.ReplaceWithMock<TService>((_, mock) => configure?.Invoke(mock), args);
 
 	public static DependencyContainerFixture ReplaceWithEmptyMock<TService>(
 		this DependencyContainerFixture fixture,
 		object[]? args = null) where TService : class
-		=> fixture
-			.ReplaceWithMock<TService>((_, _) => { }, args);
+		=> fixture.ReplaceWithMock<TService>((_, _) => { }, args);
 }

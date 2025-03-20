@@ -18,46 +18,49 @@ using RichWebApi.Utilities.Paging;
 using RichWebApi.Validation;
 
 [assembly: InternalsVisibleTo("RichWebApi.Dependencies.Database.Tests.Unit")]
+
 namespace RichWebApi;
 
-internal class DatabaseDependency(IHostEnvironment environment) : IAppDependency
+public sealed class DatabaseDependencyOptions
+{
+	public bool SkipDatabaseClientSetup { get; set; }
+}
+
+internal class DatabaseDependency(IHostEnvironment environment, DatabaseDependencyOptions options) : IAppDependency
 {
 	private const string ConfigurationSection = "Database";
 
 	public void ConfigureServices(IServiceCollection services, IAppPartsCollection parts)
 	{
-		if (environment.IsDevelopment())
-		{
-			services.AddOptionsWithValidator<DatabaseConfig, DatabaseConfig.DevEnvValidator>(ConfigurationSection);
-		}
-		else
-		{
-			services.AddOptionsWithValidator<DatabaseConfig, DatabaseConfig.ProdEnvValidator>(ConfigurationSection);
-		}
+		services.AddOptionsWithValidator<DatabaseConnectionConfig, DatabaseConnectionConfig.ProdEnvValidator>(
+			$"Dependencies:{ConfigurationSection}:Connection");
 
 		services.AddOptionsWithValidator<DatabaseEntitiesConfig, DatabaseEntitiesConfig.Validator>(
-			$"{ConfigurationSection}:Entities");
+			$"Dependencies:{ConfigurationSection}:Entities");
 
 		var migrationsAssemblyName = $"{typeof(DatabaseDependency).Assembly.GetName().Name}.Migrations";
-		services.AddDbContext<RichWebApiDbContext>((sp, dbContextOptionsBuilder) =>
+		if (!options.SkipDatabaseClientSetup)
 		{
-			dbContextOptionsBuilder.AddInterceptors(sp.GetServices<IOrderedInterceptor>().OrderBy(x => x.Order));
-			var host = sp.GetRequiredService<IWebHostEnvironment>();
-			var dbConfig = sp.GetRequiredService<IOptionsMonitor<DatabaseConfig>>()
-				.CurrentValue;
-
-			if (host.IsDevelopment())
+			services.AddDbContext<RichWebApiDbContext>((sp, dbContextOptionsBuilder) =>
 			{
-				dbContextOptionsBuilder.EnableSensitiveDataLogging();
-			}
+				dbContextOptionsBuilder.AddInterceptors(sp.GetServices<IOrderedInterceptor>().OrderBy(x => x.Order));
+				var dbConfig = sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionConfig>>()
+					.CurrentValue;
 
-			dbContextOptionsBuilder
-				.UseSqlServer(GetConnectionString(sp),
-					builder => builder
-						.EnableRetryOnFailure(dbConfig.Retries)
-						.CommandTimeout(dbConfig.Timeout)
-						.MigrationsAssembly(migrationsAssemblyName));
-		}, ServiceLifetime.Transient);
+				if (environment.IsDevelopment())
+				{
+					dbContextOptionsBuilder.EnableSensitiveDataLogging();
+				}
+
+				dbContextOptionsBuilder
+					.UseSqlServer(GetConnectionString(sp),
+						builder => builder
+							.EnableRetryOnFailure(dbConfig.Retries)
+							.CommandTimeout(dbConfig.Timeout)
+							.MigrationsAssembly(migrationsAssemblyName));
+			}, ServiceLifetime.Transient);
+		}
+
 		services.AddStartupAction<DatabaseMigrationAction>();
 		services.AddSaveChangesInterceptor<ValidationSaveChangesInterceptor>();
 		services.AddSaveChangesInterceptor<AuditSaveChangesInterceptor>();
@@ -83,13 +86,10 @@ internal class DatabaseDependency(IHostEnvironment environment) : IAppDependency
 
 	private static string GetConnectionString(IServiceProvider sp)
 	{
-		var host = sp.GetRequiredService<IWebHostEnvironment>();
-		var dbConfig = sp.GetRequiredService<IOptionsMonitor<DatabaseConfig>>()
+		var dbConfig = sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionConfig>>()
 			.CurrentValue;
 
-		return host.IsDevelopment()
-			? dbConfig.ConnectionString
-			: $"Server=tcp:{dbConfig.Host},{dbConfig.Port};Initial Catalog={dbConfig.DbInstanceIdentifier};Persist Security Info=False;User ID={dbConfig.Username};Password={dbConfig.Password};MultipleActiveResultSets=True;";
+		return dbConfig.ToConnectionString();
 	}
 
 

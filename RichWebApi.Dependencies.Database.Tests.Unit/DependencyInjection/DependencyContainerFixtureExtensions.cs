@@ -25,24 +25,25 @@ public static class DependencyContainerFixtureExtensions
 		this DependencyContainerFixture fixture, IAppPartsCollection partsToScan, Action<DbContextOptionsBuilder>? configure = null)
 	{
 		var dependencies = new AppDependenciesCollection()
-			.AddDatabase(new DummyEnvironment());
+			.AddDatabase(new DummyEnvironment(), x => x.SkipDatabaseClientSetup = true);
 		return fixture
+				.ConfigureServices(services => services
+					.AddDbContext<RichWebApiDbContext>((sp, builder) =>
+					{
+						builder.UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+							.EnableDetailedErrors()
+							.EnableSensitiveDataLogging()
+							.AddInterceptors(sp.GetServices<IOrderedInterceptor>().OrderBy(x => x.Order));
+						configure?.Invoke(builder);
+					}, ServiceLifetime.Transient, ServiceLifetime.Transient)
+					.AddDependencyServices(dependencies, partsToScan)
+				)
 			.ReplaceWithMock<IOptionsMonitor<DatabaseEntitiesConfig>>((sp, mock) =>
 				mock.CurrentValue
 					.Returns(new DatabaseEntitiesConfig
 					{
 						Validation = EntitiesValidationOption.None
-					}))
-			.ConfigureServices(services => services
-				.AddDbContext<RichWebApiDbContext>((sp, builder) =>
-				{
-					builder.UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
-						.EnableDetailedErrors()
-						.EnableSensitiveDataLogging()
-						.AddInterceptors(sp.GetServices<IOrderedInterceptor>().OrderBy(x => x.Order));
-					configure?.Invoke(builder);
-				}, ServiceLifetime.Transient, ServiceLifetime.Transient)
-				.AddDependencyServices(dependencies, partsToScan));
+					}));
 	}
 
 	private sealed class DummyEnvironment : IWebHostEnvironment

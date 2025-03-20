@@ -31,6 +31,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{7C0470FC-1
 		package.json = package.json
 		README.md = README.md
 		yarn.lock = yarn.lock
+		services.docker-compose.yaml = services.docker-compose.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nix", "nix", "{D6C11702-27B4-4F33-A24F-7DB36F8F8C8A}"
@@ -91,6 +92,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RichWebApi.Dependencies.Database.Tests.Unit", "RichWebApi.Dependencies.Database.Tests.Unit\RichWebApi.Dependencies.Database.Tests.Unit.csproj", "{978449E7-72E6-4AA6-80EB-EA9B6B9D4739}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RichWebApi.Core.Tests.Unit", "RichWebApi.Core.Tests.Unit\RichWebApi.Core.Tests.Unit.csproj", "{DA273E32-AA0F-4752-A984-365BBD4DD1A1}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RichWebApi.Tests.Integration", "RichWebApi.Tests.Integration\RichWebApi.Tests.Integration.csproj", "{0D8FB9B0-B026-43E3-9800-5284DA77EFF7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{266BFFBE-7340-426C-ADD6-F8F3453A6D6E}"
