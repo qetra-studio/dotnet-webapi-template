@@ -4,10 +4,10 @@ using RichWebApi.Models;
 
 namespace RichWebApi.Tests.FluentAssertions;
 
-public static class EquivalencyAssertionOptionsExtensions
+public static class EquivalencyOptionsExtensions
 {
-	public static EquivalencyAssertionOptions<T> ExcludingAuditableEntityProperties<T>(
-		this EquivalencyAssertionOptions<T> options) where T : class
+	public static EquivalencyOptions<T> ExcludingAuditableEntityProperties<T>(
+		this EquivalencyOptions<T> options) where T : class
 	{
 		var auditableEntityType = typeof(IAuditableEntity);
 		return options
@@ -16,16 +16,16 @@ public static class EquivalencyAssertionOptionsExtensions
 									 || info.Name == nameof(IAuditableEntity.ModifiedAt)));
 	}
 
-	public static EquivalencyAssertionOptions<T> ExcludingSoftDeletableEntityProperties<T>(
-		this EquivalencyAssertionOptions<T> options) where T : class
+	public static EquivalencyOptions<T> ExcludingSoftDeletableEntityProperties<T>(
+		this EquivalencyOptions<T> options) where T : class
 	{
 		var softDeletableEntityType = typeof(ISoftDeletableEntity);
 		return options
 			.Excluding(info => info.DeclaringType.IsAssignableTo(softDeletableEntityType) && info.Name == nameof(ISoftDeletableEntity.DeletedAt));
 	}
 
-	public static EquivalencyAssertionOptions<T> ExcludingAuditableDtoProperties<T>(
-		this EquivalencyAssertionOptions<T> options) where T : class
+	public static EquivalencyOptions<T> ExcludingAuditableDtoProperties<T>(
+		this EquivalencyOptions<T> options) where T : class
 	{
 		var auditableEntityType = typeof(IAuditableDto);
 		return options
@@ -34,8 +34,8 @@ public static class EquivalencyAssertionOptionsExtensions
 								   || info.Name == nameof(IAuditableDto.ModifiedAt)));
 	}
 
-	public static EquivalencyAssertionOptions<T> ExcludingSoftDeletableDtoProperties<T>(
-		this EquivalencyAssertionOptions<T> options) where T : class
+	public static EquivalencyOptions<T> ExcludingSoftDeletableDtoProperties<T>(
+		this EquivalencyOptions<T> options) where T : class
 	{
 		var softDeletableEntityType = typeof(ISoftDeletableDto);
 		return options

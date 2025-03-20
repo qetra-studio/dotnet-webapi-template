@@ -16,7 +16,10 @@ public abstract class EntityConfiguration<T> : IEntityConfiguration<T>
 		if (tableAttribute != null)
 		{
 			builder.Metadata.SetTableName(tableAttribute.Name);
-			builder.Metadata.SetSchema($"app_{tableAttribute.Schema}");
+			if (!string.IsNullOrEmpty(tableAttribute.Schema))
+			{
+				builder.Metadata.SetSchema($"app_{tableAttribute.Schema}");
+			}
 		}
 
 		var commentAttribute = customAttributes.OfType<CommentAttribute>().FirstOrDefault();

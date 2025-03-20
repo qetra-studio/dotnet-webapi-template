@@ -1,0 +1,21 @@
+version: '3.8'
+name: 'RichWebApi'
+services:
+    RichWebApi-mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+            - '51010:1433'
+        environment:
+            ACCEPT_EULA: Y
+            MSSQL_SA_PASSWORD: RichWebApi-dev
+        volumes:
+            - mssql_data:/var/opt/mssql
+        restart: unless-stopped
+        networks:
+            - RichWebApi
+volumes:
+    mssql_data:
+    es_data:
+networks:
+    RichWebApi:
+        name: RichWebApi_network
