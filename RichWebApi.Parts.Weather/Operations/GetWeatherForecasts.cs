@@ -36,13 +36,17 @@ public record GetWeatherForecasts(int Page, int Size, DateTime? From = null, Dat
 	{
 		public Task<PagedResult<WeatherForecastDto>> Handle(GetWeatherForecasts request,
 															CancellationToken cancellationToken)
-			=> database.ReadAsync((db, ct) => db.Context
+		{
+			var from = request.From.HasValue ? DateOnly.FromDateTime(request.From.Value) : (DateOnly?)null;
+			var to = request.To.HasValue ? DateOnly.FromDateTime(request.To.Value) : (DateOnly?)null;
+			return database.ReadAsync((db, ct) => db.Context
 				.Set<WeatherForecast>()
-				.MaybeWhere(request.From is not null, x => x.Date >= request.From)
-				.MaybeWhere(request.To is not null, x => x.Date <= request.To)
+				.MaybeWhere(from is not null, x => x.Date >= from)
+				.MaybeWhere(to is not null, x => x.Date <= to)
 				.OrderBy(x => x.Date)
 				.AsNoTracking()
 				.ProjectTo<WeatherForecastDto>(mapper.ConfigurationProvider)
 				.ToPagedResultAsync(request, ct), cancellationToken);
+		}
 	}
 }

@@ -41,7 +41,7 @@ public class DatabaseConfiguratorTests : UnitTest
 			.ReplaceWithMock<INonGenericEntityConfiguration>(configMock)
 			.ConfigureServices(s
 				=> s.TryAddEnumerable(ServiceDescriptor
-					.Singleton<INonGenericEntityConfiguration, UnitAuditableEntity.Configurator>()))
+					.Singleton<INonGenericEntityConfiguration, UnitDateAuditableEntity.Configurator>()))
 			.BuildServiceProvider();
 		await TriggerDbContextConfigurationAsync(sp);
 		configMock.DidNotReceive().Configure(Arg.Any<EntityTypeBuilder<IgnoredEntity>>());
@@ -57,7 +57,7 @@ public class DatabaseConfiguratorTests : UnitTest
 			.ReplaceWithMock<INonGenericEntityConfiguration>(configMock)
 			.ConfigureServices(s
 				=> s.TryAddEnumerable(ServiceDescriptor
-					.Singleton<INonGenericEntityConfiguration, UnitAuditableEntity.Configurator>()))
+					.Singleton<INonGenericEntityConfiguration, UnitDateAuditableEntity.Configurator>()))
 			.BuildServiceProvider();
 		await TriggerDbContextConfigurationAsync(sp);
 		configMock
@@ -65,10 +65,10 @@ public class DatabaseConfiguratorTests : UnitTest
 			.Configure(Arg.Any<EntityTypeBuilder<ConfigurableEntity>>());
 	}
 
-	private static ValueTask<EntityEntry<UnitAuditableEntity>> TriggerDbContextConfigurationAsync(IServiceProvider sp)
+	private static ValueTask<EntityEntry<UnitDateAuditableEntity>> TriggerDbContextConfigurationAsync(IServiceProvider sp)
 	{
 		var dbContext = sp.GetRequiredService<RichWebApiDbContext>();
-		return dbContext.AddAsync(new UnitAuditableEntity());
+		return dbContext.AddAsync(new UnitDateAuditableEntity());
 	}
 
 	public override async Task DisposeAsync()

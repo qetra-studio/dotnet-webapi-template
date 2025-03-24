@@ -3,9 +3,9 @@ namespace RichWebApi.Persistence.Internal;
 
 internal interface IEntityValidatorsProvider
 {
-	EntityAsyncValidator GetAsyncValidator(IServiceProvider serviceProvider, Type entityType);
+	IEnumerable<EntityAsyncValidator> GetAsyncValidators(IServiceProvider serviceProvider, Type entityType);
 	
-	public IReadOnlyDictionary<Type, (Func<IServiceProvider, object> ValidatorProvider, AsyncValidationExecutor
+	public IReadOnlyDictionary<Type, (Func<IServiceProvider, object[]> ValidatorsProvider, AsyncValidationExecutor
 		ValidationExecutor
 		)> AsyncValidators { get; }
 	bool AllEntitiesHaveValidators { get; }

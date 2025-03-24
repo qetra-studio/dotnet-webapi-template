@@ -1,11 +1,13 @@
-﻿using RichWebApi.Entities.Configuration;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using RichWebApi.Entities.Configuration;
+using RichWebApi.Entities.Identity;
 
 namespace RichWebApi;
 
 public sealed class RichWebApiDbContext(
 	IDatabaseConfigurator databaseConfigurator,
 	DbContextOptions<RichWebApiDbContext> options)
-	: DbContext(options)
+	: IdentityDbContext<RichWebApiUser, RichWebApiRole, Guid, RichWebApiUserClaim, RichWebApiUserRole, RichWebApiUserLogin, RichWebApiRoleClaim, RichWebApiUserToken>(options)
 {
 	protected override void OnModelCreating(ModelBuilder builder)
 	{

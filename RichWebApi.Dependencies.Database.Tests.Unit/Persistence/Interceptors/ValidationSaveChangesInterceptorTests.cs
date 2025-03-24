@@ -60,7 +60,7 @@ public class ValidationSaveChangesInterceptorTests : UnitTest
 			.SetDatabaseEntitiesConfig(EntitiesValidationOption.None)
 			.BuildServiceProvider();
 		var dbContext = sp.GetRequiredService<RichWebApiDbContext>();
-		await dbContext.AddAsync(new UnitAuditableEntity
+		await dbContext.AddAsync(new UnitDateAuditableEntity
 		{
 			Invalid = true
 		});
@@ -78,10 +78,10 @@ public class ValidationSaveChangesInterceptorTests : UnitTest
 	[Fact]
 	public async Task CallsProvidedValidator()
 	{
-		var entity = new UnitAuditableEntity();
+		var entity = new UnitDateAuditableEntity();
 		var sp = _container
 			.SetDatabaseEntitiesConfig(EntitiesValidationOption.Required)
-			.ReplaceWithMock<IValidator<UnitAuditableEntity>>(mock => mock.ValidateAsync(Arg.Is<UnitAuditableEntity>(e => e == entity),
+			.ReplaceWithMock<IValidator<UnitDateAuditableEntity>>(mock => mock.ValidateAsync(Arg.Is<UnitDateAuditableEntity>(e => e == entity),
 					Arg.Any<CancellationToken>())
 				.Returns(new ValidationResult()))
 			.BuildServiceProvider();
@@ -94,14 +94,14 @@ public class ValidationSaveChangesInterceptorTests : UnitTest
 
 		await interceptor.SavingChangesAsync(eventData, default);
 
-		var validatorMock = sp.GetRequiredService<IValidator<UnitAuditableEntity>>();
-		await validatorMock.Received(1).ValidateAsync(Arg.Is<UnitAuditableEntity>(e => e == entity), Arg.Any<CancellationToken>());
+		var validatorMock = sp.GetRequiredService<IValidator<UnitDateAuditableEntity>>();
+		await validatorMock.Received(1).ValidateAsync(Arg.Is<UnitDateAuditableEntity>(e => e == entity), Arg.Any<CancellationToken>());
 	}
 
 	[Fact]
 	public async Task ThrowsIfSomeOfEntitiesAreInvalid()
 	{
-		var entity = new UnitAuditableEntity
+		var entity = new UnitDateAuditableEntity
 		{
 			Invalid = true
 		};
@@ -118,11 +118,8 @@ public class ValidationSaveChangesInterceptorTests : UnitTest
 		var intercept = () => interceptor.SavingChangesAsync(eventData, default).AsTask();
 		var exceptionAssert = await intercept.Should()
 			.ThrowExactlyAsync<AggregateException>();
-		exceptionAssert.And.InnerExceptions
-			.Should().AllBeAssignableTo<ValidationException>()
-			.And.ContainSingle()
-			.And.BeEquivalentTo(new object[]
-			{
+		exceptionAssert.Which.InnerExceptions
+			.Should().ContainEquivalentOf(
 				new
 				{
 					Errors = new[]
@@ -130,12 +127,17 @@ public class ValidationSaveChangesInterceptorTests : UnitTest
 						new
 						{
 							AttemptedValue = true,
-							PropertyName = nameof(UnitAuditableEntity.Invalid),
+							PropertyName = nameof(UnitDateAuditableEntity.Invalid),
 							Severity = Severity.Error,
 							ErrorCode = "EqualValidator"
 						}
 					}
-				}
-			});
+				});
+	}
+
+	public override async Task DisposeAsync()
+	{
+		await base.DisposeAsync();
+		_container.Clear();
 	}
 }

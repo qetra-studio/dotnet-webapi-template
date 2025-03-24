@@ -5,11 +5,11 @@ using Microsoft.OpenApi.Models;
 using RichWebApi.HealthChecks;
 using RichWebApi.Maintenance;
 using RichWebApi.Middleware;
+using RichWebApi.Parts.Auth;
 using RichWebApi.Startup;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace RichWebApi;
 
@@ -104,7 +104,8 @@ public class Program
 	private static IAppDependenciesCollection EnrichWithDependencies(IAppDependenciesCollection collection,
 																	 IWebHostEnvironment env)
 		=> collection.AddDatabase(env)
-			.AddSignalR(c => c.AddWeather());
+			.AddSignalR(c => c.AddWeather())
+			.AddAuth();
 
 	public static IAppPartsCollection EnrichWithApplicationParts(IAppPartsCollection collection)
 		=> collection.AddWeather();

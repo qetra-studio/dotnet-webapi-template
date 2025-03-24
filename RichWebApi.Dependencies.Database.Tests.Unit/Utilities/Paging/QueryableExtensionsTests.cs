@@ -38,13 +38,13 @@ public class QueryableExtensionsTests : UnitTest
 		var database = _serviceProvider.GetRequiredService<IRichWebApiDatabase>();
 		var entities = new[]
 		{
-			new UnitAuditableEntity(),
-			new UnitAuditableEntity()
+			new UnitDateAuditableEntity(),
+			new UnitDateAuditableEntity()
 		};
 		await database.PersistEntitiesAsync(entities);
 		await database.PersistAsync();
 		var page = await database.ReadAsync((db, ct) => db.Context
-			.Set<UnitAuditableEntity>()
+			.Set<UnitDateAuditableEntity>()
 			.ToPagedResultAsync(new UnitPagedRequest(0, 0), ct), default);
 		page.Should().BeEquivalentTo(new
 		{
@@ -60,15 +60,15 @@ public class QueryableExtensionsTests : UnitTest
 		var database = _serviceProvider.GetRequiredService<IRichWebApiDatabase>();
 		var entities = new[]
 		{
-			new UnitAuditableEntity(),
-			new UnitAuditableEntity()
+			new UnitDateAuditableEntity(),
+			new UnitDateAuditableEntity()
 		};
 		await database.PersistEntitiesAsync(entities);
 		await database.PersistAsync();
 		var page = await database.ReadAsync((db, ct) => db.Context
-			.Set<UnitAuditableEntity>()
+			.Set<UnitDateAuditableEntity>()
 			.ToPagedResultAsync(new UnitPagedRequest(0, 1), ct), default);
-		page.Should().BeEquivalentTo(new PagedResult<UnitAuditableEntity>(entities.Take(1).ToArray(), 0, 1, 2));
+		page.Should().BeEquivalentTo(new PagedResult<UnitDateAuditableEntity>(entities.Take(1).ToArray(), 0, 1, 2));
 	}
 
 	[Fact]
@@ -77,16 +77,16 @@ public class QueryableExtensionsTests : UnitTest
 		var database = _serviceProvider.GetRequiredService<IRichWebApiDatabase>();
 		var entities = new[]
 		{
-			new UnitAuditableEntity(),
-			new UnitAuditableEntity()
+			new UnitDateAuditableEntity(),
+			new UnitDateAuditableEntity()
 		};
 		await database.PersistEntitiesAsync(entities);
 		await database.PersistAsync();
 		var page = await database.ReadAsync((db, ct) => db.Context
-			.Set<UnitAuditableEntity>()
+			.Set<UnitDateAuditableEntity>()
 			.Where(x => x.Invalid)
 			.ToPagedResultAsync(new UnitPagedRequest(0, entities.Length), ct), default);
-		page.Should().BeEquivalentTo(new PagedResult<UnitAuditableEntity>(Array.Empty<UnitAuditableEntity>(), 0, entities.Length, 0));
+		page.Should().BeEquivalentTo(new PagedResult<UnitDateAuditableEntity>(Array.Empty<UnitDateAuditableEntity>(), 0, entities.Length, 0));
 	}
 
 	[Fact]
@@ -95,16 +95,16 @@ public class QueryableExtensionsTests : UnitTest
 		var database = _serviceProvider.GetRequiredService<IRichWebApiDatabase>();
 		var entities = new[]
 		{
-			new UnitAuditableEntity(),
-			new UnitAuditableEntity()
+			new UnitDateAuditableEntity(),
+			new UnitDateAuditableEntity()
 		};
 		await database.PersistEntitiesAsync(entities);
 		await database.PersistAsync();
 		var page = await database.ReadAsync((db, ct) => db.Context
-			.Set<UnitAuditableEntity>()
+			.Set<UnitDateAuditableEntity>()
 			.Where(x => x.Id == 2)
 			.ToPagedResultAsync(new UnitPagedRequest(0, entities.Length), ct), default);
-		page.Should().BeEquivalentTo(new PagedResult<UnitAuditableEntity>(entities.Skip(1).ToArray(), 0, entities.Length, 1));
+		page.Should().BeEquivalentTo(new PagedResult<UnitDateAuditableEntity>(entities.Skip(1).ToArray(), 0, entities.Length, 1));
 	}
 
 	private record UnitPagedRequest(int Page, int Size) : IPagedRequest;

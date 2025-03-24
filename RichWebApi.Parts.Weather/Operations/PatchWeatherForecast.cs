@@ -30,9 +30,10 @@ public record PatchWeatherForecast(WeatherForecastDto WeatherForecast) : IReques
 		public async Task Handle(PatchWeatherForecast request, CancellationToken cancellationToken)
 		{
 			var forecast = request.WeatherForecast;
+			var date = forecast.Date;
 			var foundForecast = await database.ReadAsync((db, ct) => db.Context
 					.Set<WeatherForecast>()
-					.FirstOrExceptionAsync(x => x.Date == forecast.Date, ct), cancellationToken
+					.FirstOrExceptionAsync(x => x.Date == date, ct), cancellationToken
 			);
 
 			mapper.Map(forecast, foundForecast);

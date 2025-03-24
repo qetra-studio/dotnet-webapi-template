@@ -1,7 +1,9 @@
 ﻿using System.Reflection;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using RichWebApi.Entities;
 using RichWebApi.Entities.Configuration;
 using RichWebApi.Persistence.Interceptors;
 
@@ -23,10 +25,17 @@ public static class ServiceCollectionExtensions
 
 		foreach (var assembly in assemblies)
 		{
-			var configurations = assembly.GetExportedTypes()
+			var types = assembly.GetExportedTypes();
+			var configurations = types
 				.Where(x => x is { IsAbstract: false, IsClass: true } && x.IsAssignableTo(entityConfigurationType))
 				.Select(c => new ServiceDescriptor(entityConfigurationType, c, ServiceLifetime.Scoped));
 			services.TryAddEnumerable(configurations);
+
+			var validators = types
+				.Where(t => t.IsAssignableTo(typeof(IEntity)))
+				.Select(t => new ServiceDescriptor(typeof(IValidator<>).MakeGenericType(t),
+					typeof(BasicEntityValidator<>).MakeGenericType(t), ServiceLifetime.Scoped));
+			services.TryAddEnumerable(validators);
 		}
 
 		return services;

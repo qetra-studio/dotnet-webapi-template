@@ -74,7 +74,7 @@ public class EntityValidatorsProviderTests : UnitTest
 			.ReplaceWithEmptyMock<IValidator<ConfigurableEntity>>()
 			.BuildServiceProvider();
 		var validatorsProvider = sp.GetRequiredService<IEntityValidatorsProvider>();
-		var validator = validatorsProvider.GetAsyncValidator(sp, typeof(ConfigurableEntity));
+		var validator = validatorsProvider.GetAsyncValidators(sp, typeof(ConfigurableEntity));
 		validator
 			.Should()
 			.NotBeNull();
@@ -88,8 +88,9 @@ public class EntityValidatorsProviderTests : UnitTest
 			.ReplaceWithMock<IValidator<ConfigurableEntity>>(mock => mock.ValidateAsync(Arg.Any<ConfigurableEntity>(), Arg.Any<CancellationToken>()))
 			.BuildServiceProvider();
 		var validatorsProvider = sp.GetRequiredService<IEntityValidatorsProvider>();
-		var validator = validatorsProvider.GetAsyncValidator(sp, typeof(ConfigurableEntity));
-		await validator(new ConfigurableEntity(), default);
+		var validator = validatorsProvider.GetAsyncValidators(sp, typeof(ConfigurableEntity)).ToArray();
+		validator.Length.Should().Be(1);
+		await validator[0](new ConfigurableEntity(), default);
 
 		var mock = sp.GetRequiredService<IValidator<ConfigurableEntity>>();
 		await mock.Received(1).ValidateAsync(Arg.Any<ConfigurableEntity>(), Arg.Any<CancellationToken>());
@@ -103,8 +104,9 @@ public class EntityValidatorsProviderTests : UnitTest
 			.ReplaceWithEmptyMock<IValidator<ConfigurableEntity>>()
 			.BuildServiceProvider();
 		var validatorsProvider = sp.GetRequiredService<IEntityValidatorsProvider>();
-		var validator = validatorsProvider.GetAsyncValidator(sp, typeof(ConfigurableEntity));
-		var action = () => validator(new IgnoredEntity(), default);
+		var validators = validatorsProvider.GetAsyncValidators(sp, typeof(ConfigurableEntity)).ToArray();
+		validators.Length.Should().Be(1);
+		var action = () => validators[0](new IgnoredEntity(), default);
 		return action.Should()
 			.ThrowExactlyAsync<InvalidCastException>("entity can't be explicitly casted to validator of given type");
 	}
@@ -117,7 +119,7 @@ public class EntityValidatorsProviderTests : UnitTest
 			.BuildServiceProvider();
 		var validatorsProvider = sp.GetRequiredService<IEntityValidatorsProvider>();
 		var entityType = typeof(ConfigurableEntity);
-		var getter = () => validatorsProvider.GetAsyncValidator(sp, entityType);
+		var getter = () => validatorsProvider.GetAsyncValidators(sp, entityType).ToArray();
 		getter.Should()
 			.ThrowExactly<MissingEntitiesValidatorsException>()
 			.Which.MissingTypes.Should()

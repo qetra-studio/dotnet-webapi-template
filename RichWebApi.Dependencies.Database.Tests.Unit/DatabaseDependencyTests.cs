@@ -1,15 +1,10 @@
 ﻿using FluentAssertions;
-using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Internal;
 using NSubstitute;
-using RichWebApi.Config;
 using RichWebApi.Entities.Configuration;
-using RichWebApi.Persistence;
 using RichWebApi.Tests.DependencyInjection;
 using RichWebApi.Tests.Entities;
-using RichWebApi.Tests.Extensions;
 using RichWebApi.Tests.Logging;
 using RichWebApi.Tests.NSubstitute;
 using Xunit.Abstractions;

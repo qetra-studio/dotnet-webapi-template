@@ -6,6 +6,7 @@ using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using RichWebApi.Persistence.Interceptors;
+using RichWebApi.Services;
 using RichWebApi.Tests.DependencyInjection;
 using RichWebApi.Tests.Entities;
 using RichWebApi.Tests.Logging;
@@ -19,7 +20,7 @@ public class AuditSaveChangesInterceptorTests : UnitTest
 	private readonly DependencyContainerFixture _container;
 
 	public AuditSaveChangesInterceptorTests(ITestOutputHelper testOutputHelper,
-											UnitDependencyContainerFixture container) : base(testOutputHelper)
+	                                        UnitDependencyContainerFixture container) : base(testOutputHelper)
 	{
 		var parts = new AppPartsCollection
 		{
@@ -42,7 +43,8 @@ public class AuditSaveChangesInterceptorTests : UnitTest
 		var eventData = new UnitTestDbContextEventData(sp.GetRequiredService<ILoggingOptions>(), null);
 
 		var interceptor = new AuditSaveChangesInterceptor(sp.GetRequiredService<ILogger<AuditSaveChangesInterceptor>>(),
-			clockMock);
+			clockMock,
+			sp.GetRequiredService<IIdentityProvider>());
 		await interceptor.SavingChangesAsync(eventData, default);
 		var _ = clockMock.DidNotReceive().UtcNow;
 	}
@@ -55,16 +57,17 @@ public class AuditSaveChangesInterceptorTests : UnitTest
 			.ReplaceWithMock<ISystemClock>(mock => SetupClockMock(mock, now))
 			.BuildServiceProvider();
 		var clockMock = sp.GetRequiredService<ISystemClock>();
-		var entity = new UnitAuditableEntity();
+		var entity = new UnitDateAuditableEntity();
 		var dbContext = sp.GetRequiredService<RichWebApiDbContext>();
 		var eventData = new UnitTestDbContextEventData(sp.GetRequiredService<ILoggingOptions>(), dbContext);
 
 		await dbContext.AddAsync(entity);
 		var interceptor = new AuditSaveChangesInterceptor(sp.GetRequiredService<ILogger<AuditSaveChangesInterceptor>>(),
-			clockMock);
+			clockMock,
+			sp.GetRequiredService<IIdentityProvider>());
 		await interceptor.SavingChangesAsync(eventData, default);
 		var _ = clockMock.Received(1).UtcNow;
-		entity.Should().BeEquivalentTo(new UnitAuditableEntity
+		entity.Should().BeEquivalentTo(new UnitDateAuditableEntity
 		{
 			Id = 1,
 			CreatedAt = now.DateTime,
@@ -81,13 +84,14 @@ public class AuditSaveChangesInterceptorTests : UnitTest
 			.ReplaceWithMock<ISystemClock>(mock => SetupClockMock(mock, now))
 			.BuildServiceProvider();
 		var clockMock = sp.GetRequiredService<ISystemClock>();
-		var entity = new UnitAuditableEntity();
+		var entity = new UnitDateAuditableEntity();
 		var dbContext = sp.GetRequiredService<RichWebApiDbContext>();
 		var eventData = new UnitTestDbContextEventData(sp.GetRequiredService<ILoggingOptions>(), dbContext);
 
 		var entry = await dbContext.AddAsync(entity);
 		var interceptor = new AuditSaveChangesInterceptor(sp.GetRequiredService<ILogger<AuditSaveChangesInterceptor>>(),
-			clockMock);
+			clockMock,
+			sp.GetRequiredService<IIdentityProvider>());
 		await interceptor.SavingChangesAsync(eventData, default);
 
 		var aBitLater = now.AddDays(1);
@@ -96,7 +100,7 @@ public class AuditSaveChangesInterceptorTests : UnitTest
 		entry.State = EntityState.Modified;
 
 		await interceptor.SavingChangesAsync(eventData, default);
-		entity.Should().BeEquivalentTo(new UnitAuditableEntity
+		entity.Should().BeEquivalentTo(new UnitDateAuditableEntity
 		{
 			Id = 1,
 			CreatedAt = now.DateTime,
@@ -114,20 +118,21 @@ public class AuditSaveChangesInterceptorTests : UnitTest
 			.ReplaceWithMock<ISystemClock>(mock => SetupClockMock(mock, now))
 			.BuildServiceProvider();
 		var clockMock = sp.GetRequiredService<ISystemClock>();
-		var entity = new UnitAuditableEntity();
+		var entity = new UnitDateAuditableEntity();
 		var dbContext = sp.GetRequiredService<RichWebApiDbContext>();
 		var eventData = new UnitTestDbContextEventData(sp.GetRequiredService<ILoggingOptions>(), dbContext);
 
 		var entry = await dbContext.AddAsync(entity);
 		var interceptor = new AuditSaveChangesInterceptor(sp.GetRequiredService<ILogger<AuditSaveChangesInterceptor>>(),
-			clockMock);
+			clockMock,
+			sp.GetRequiredService<IIdentityProvider>());
 
 		await interceptor.SavingChangesAsync(eventData, default);
 		entry.State = EntityState.Deleted;
 
 		await interceptor.SavingChangesAsync(eventData, default);
 
-		entity.Should().BeEquivalentTo(new UnitAuditableEntity
+		entity.Should().BeEquivalentTo(new UnitDateAuditableEntity
 		{
 			Id = 1,
 			CreatedAt = now.DateTime,

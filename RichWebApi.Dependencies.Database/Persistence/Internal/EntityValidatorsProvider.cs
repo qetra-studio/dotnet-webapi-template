@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RichWebApi.Config;
 using RichWebApi.Entities;
+using RichWebApi.Entities.Configuration;
 using RichWebApi.Exceptions;
 using RichWebApi.Extensions;
 using static System.Linq.Expressions.Expression;
@@ -14,17 +15,15 @@ internal class EntityValidatorsProvider : IEntityValidatorsProvider
 {
 	private readonly ILogger<EntityValidatorsProvider> _logger;
 
-	public IReadOnlyDictionary<Type, (Func<IServiceProvider, object> ValidatorProvider, AsyncValidationExecutor
-		ValidationExecutor
-		)> AsyncValidators
-	{ get; }
+	public IReadOnlyDictionary<Type, (Func<IServiceProvider, object[]> ValidatorsProvider, AsyncValidationExecutor
+		ValidationExecutor)> AsyncValidators { get; }
 
 	public bool AllEntitiesHaveValidators { get; }
 
 	public EntityValidatorsProvider(ILogger<EntityValidatorsProvider> logger,
-									IServiceProvider serviceProvider,
-									IOptionsMonitor<DatabaseEntitiesConfig> configMonitor,
-									IEnumerable<IAppPart> partsToScan)
+	                                IServiceProvider serviceProvider,
+	                                IOptionsMonitor<DatabaseEntitiesConfig> configMonitor,
+	                                IEnumerable<IAppPart> partsToScan)
 	{
 		_logger = logger;
 		var typeMarkersToScan = partsToScan
@@ -35,15 +34,15 @@ internal class EntityValidatorsProvider : IEntityValidatorsProvider
 		var entityTypes = typeMarkersToScan
 			.SelectMany(x => x.Assembly.ExportedTypes
 				.Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false }
-							&& t.IsAssignableTo(entityType)))
+				            && t.IsAssignableTo(entityType)))
 			.ToArray();
 		var validators = logger.Time(() =>
 		{
 			using var scope = serviceProvider.CreateScope();
 			var sp = scope.ServiceProvider;
-			return entityTypes.Select(x => (Type: x, MaybeValidator: CreateEntityValidator(sp, x)))
-				.Where(x => x.MaybeValidator.HasValue)
-				.ToDictionary(x => x.Type, x => x.MaybeValidator!.Value);
+			return entityTypes.Select(x => (Type: x, MaybeValidators: CreateEntityValidators(sp, x)))
+				.Where(x => x.MaybeValidators.HasValue)
+				.ToDictionary(x => x.Type, x => x.MaybeValidators!.Value);
 		}, "Build validator callers for entities, count: {Count}", entityTypes.Length);
 		AllEntitiesHaveValidators = entityTypes.Length == validators.Count;
 		AsyncValidators = validators.AsReadOnly();
@@ -57,19 +56,23 @@ internal class EntityValidatorsProvider : IEntityValidatorsProvider
 		}
 	}
 
-	public EntityAsyncValidator GetAsyncValidator(IServiceProvider serviceProvider, Type entityType)
+	public IEnumerable<EntityAsyncValidator> GetAsyncValidators(IServiceProvider serviceProvider, Type entityType)
 	{
-		if (!AsyncValidators.TryGetValue(entityType, out var entityValidator))
+		if (!AsyncValidators.TryGetValue(entityType, out var entityValidators))
 		{
-			throw new MissingEntitiesValidatorsException(new[] { entityType });
+			throw new MissingEntitiesValidatorsException([entityType]);
 		}
 
-		var (validatorProvider, validate) = entityValidator;
-		var validator = validatorProvider(serviceProvider);
-		return (entity, token) => validate(validator, entity, token);
+		var (validatorProvider, validate) = entityValidators;
+		var validators = validatorProvider(serviceProvider);
+		foreach (var v in validators)
+		{
+			yield return (entity, token) => validate(v, entity, token);	
+		}
+		
 	}
 
-	private (Func<IServiceProvider, object>, AsyncValidationExecutor)? CreateEntityValidator(
+	private (Func<IServiceProvider, object[]>, AsyncValidationExecutor)? CreateEntityValidators(
 		IServiceProvider serviceProvider, Type entityType)
 	{
 		var entityName = entityType.Name;
@@ -77,12 +80,19 @@ internal class EntityValidatorsProvider : IEntityValidatorsProvider
 
 		var validatorType = typeof(IValidator<>).MakeGenericType(entityType);
 
-		object? ProvideValidator(IServiceProvider sp) => sp.GetService(validatorType);
-		var validator = ProvideValidator(serviceProvider);
+		object[] ProvideValidators(IServiceProvider sp) => sp.GetServices(validatorType)
+			.Where(x => x is not null)
+			.ToArray()!;
 
-		if (validator == null)
+		var implementations = ProvideValidators(serviceProvider).Where(x =>
 		{
-			_logger.LogDebug("Missing validator for entity '{EntityName}'", entityName);
+			var type = x.GetType();
+			return !type.IsConstructedGenericType || type.GetGenericTypeDefinition() != typeof(BasicEntityValidator<>);
+		}).ToArray();
+
+		if (implementations.Length == 0)
+		{
+			_logger.LogDebug("Missing validator implementation for entity '{EntityName}'", entityName);
 			return null;
 		}
 
@@ -108,6 +118,6 @@ internal class EntityValidatorsProvider : IEntityValidatorsProvider
 			).Compile();
 		}, "Build validator caller for entity '{EntityName}'", entityName);
 
-		return (ProvideValidator!, validateFunc);
+		return (ProvideValidators, validateFunc);
 	}
 }

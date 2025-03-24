@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.FileProviders;
+using RichWebApi.Services;
 
 namespace RichWebApi;
 
@@ -16,10 +17,16 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<RichWebApi
 		public string WebRootPath { get; set; } = null!;
 		public IFileProvider WebRootFileProvider { get; set; } = null!;
 	}
+	
+	private sealed class DummyIdentityProvider : IIdentityProvider
+	{
+		public Guid? UserId { get; }
+	}
 
 	public RichWebApiDbContext CreateDbContext(string[] args)
 	{
 		var configurationRoot = new ConfigurationBuilder()
+			.AddJsonFile("appsettings.Development.json")
 			.AddUserSecrets<Program>()
 			.AddEnvironmentVariables()
 			.Build();
@@ -37,6 +44,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<RichWebApi
 			.AddSingleton<IConfiguration>(configurationRoot)
 			.AddSingleton(configurationRoot)
 			.AddSingleton<IWebHostEnvironment>(env)
+			.AddSingleton<IIdentityProvider, DummyIdentityProvider>()
 			.AddAppParts(parts)
 			.AddDependencyServices(dependencies, parts)
 			.BuildServiceProvider();

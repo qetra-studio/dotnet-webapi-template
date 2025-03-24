@@ -8,7 +8,7 @@ using RichWebApi.Validation;
 [assembly: InternalsVisibleTo("RichWebApi.Parts.Weather.Tests.Unit")]
 namespace RichWebApi;
 
-internal class WeatherPart : IAppPart
+internal class WeatherPart() : IAppPart
 {
 	public void ConfigureServices(IServiceCollection services)
 	{

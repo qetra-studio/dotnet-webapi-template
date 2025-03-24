@@ -23,10 +23,13 @@ public record GetWeatherForecast(DateTime Date) : IRequest<WeatherForecastDto>
 		: IRequestHandler<GetWeatherForecast, WeatherForecastDto>
 	{
 		public Task<WeatherForecastDto> Handle(GetWeatherForecast request, CancellationToken cancellationToken)
-			=> database.ReadAsync((db, ct) => db.Context
+		{
+			var date = DateOnly.FromDateTime(request.Date);
+			return database.ReadAsync((db, ct) => db.Context
 				.Set<WeatherForecast>()
-				.Where(x => x.Date == request.Date)
+				.Where(x => x.Date == date)
 				.ProjectTo<WeatherForecastDto>(mapper.ConfigurationProvider)
 				.FirstOrExceptionAsync(ct), cancellationToken);
+		}
 	}
 }

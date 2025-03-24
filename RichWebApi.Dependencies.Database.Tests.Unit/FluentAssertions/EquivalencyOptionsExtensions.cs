@@ -9,19 +9,19 @@ public static class EquivalencyOptionsExtensions
 	public static EquivalencyOptions<T> ExcludingAuditableEntityProperties<T>(
 		this EquivalencyOptions<T> options) where T : class
 	{
-		var auditableEntityType = typeof(IAuditableEntity);
+		var auditableEntityType = typeof(IDateAuditableEntity);
 		return options
 			.Excluding(info => info.DeclaringType.IsAssignableTo(auditableEntityType)
-								 && (info.Name == nameof(IAuditableEntity.CreatedAt)
-									 || info.Name == nameof(IAuditableEntity.ModifiedAt)));
+								 && (info.Name == nameof(IDateAuditableEntity.CreatedAt)
+									 || info.Name == nameof(IDateAuditableEntity.ModifiedAt)));
 	}
 
 	public static EquivalencyOptions<T> ExcludingSoftDeletableEntityProperties<T>(
 		this EquivalencyOptions<T> options) where T : class
 	{
-		var softDeletableEntityType = typeof(ISoftDeletableEntity);
+		var softDeletableEntityType = typeof(IDateSoftDeletableEntity);
 		return options
-			.Excluding(info => info.DeclaringType.IsAssignableTo(softDeletableEntityType) && info.Name == nameof(ISoftDeletableEntity.DeletedAt));
+			.Excluding(info => info.DeclaringType.IsAssignableTo(softDeletableEntityType) && info.Name == nameof(IDateSoftDeletableEntity.DeletedAt));
 	}
 
 	public static EquivalencyOptions<T> ExcludingAuditableDtoProperties<T>(

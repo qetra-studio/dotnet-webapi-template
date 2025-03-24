@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -68,8 +67,8 @@ internal class DatabaseDependency(IHostEnvironment environment, DatabaseDependen
 		services.TryAddScoped<IDatabasePolicySet, DatabasePolicySet>();
 		services.TryAddScoped<IDatabaseConfigurator, DatabaseConfigurator>();
 		services.TryAddScoped<IValidator<IPagedRequest>, IPagedRequest.Validator>();
-		services.TryAddScoped<IValidator<IAuditableEntity>, IAuditableEntity.Validator>();
-		services.TryAddScoped<IValidator<ISoftDeletableEntity>, ISoftDeletableEntity.Validator>();
+		services.TryAddScoped<IValidator<IDateAuditableEntity>, IDateAuditableEntity.Validator>();
+		services.TryAddScoped<IValidator<IDateSoftDeletableEntity>, IDateSoftDeletableEntity.Validator>();
 		AddInternalServices(services);
 		services.AddHealthChecks()
 			.AddSqlServer(GetConnectionString);

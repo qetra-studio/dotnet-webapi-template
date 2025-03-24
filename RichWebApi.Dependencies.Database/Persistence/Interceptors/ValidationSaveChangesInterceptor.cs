@@ -74,9 +74,9 @@ internal class ValidationSaveChangesInterceptor(
 
 			foreach (var group in entriesByType)
 			{
-				var asyncValidator = validatorsProvider.GetAsyncValidator(sp, group.Key);
+				var asyncValidators = validatorsProvider.GetAsyncValidators(sp, group.Key);
 
-				var tasks = group.Value.Select(x => asyncValidator(x, cancellationToken));
+				var tasks = group.Value.SelectMany(x => asyncValidators.Select(v => v(x, cancellationToken)));
 				var groupResult = await Task.WhenAll(tasks);
 				var groupFailures = groupResult.Where(x => !x.IsValid).ToArray();
 

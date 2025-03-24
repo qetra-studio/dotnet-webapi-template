@@ -22,7 +22,7 @@ internal sealed class WeatherWeekFillerService(
 		var logger = serviceProvider.GetRequiredService<ILogger<WeatherWeekFillerService>>();
 		var database = serviceProvider.GetRequiredService<IRichWebApiDatabase>();
 		var clock = serviceProvider.GetRequiredService<ISystemClock>();
-		var now = clock.UtcNow.DateTime;
+		var now = DateOnly.FromDateTime(clock.UtcNow.DateTime);
 		var schedule = CrontabSchedule.Parse("0 0 * * *");
 		var weekAfterNow = now.AddDays(7);
 		var weatherWeek = await database.ReadAsync((db, ct) => db.Context
@@ -32,15 +32,16 @@ internal sealed class WeatherWeekFillerService(
 			.Select(x => x.Date)
 			.ToListAsync(ct), cancellationToken);
 
-		var week = schedule.GetNextOccurrences(now, weekAfterNow).ToArray();
+		var week = schedule.GetNextOccurrences(now.ToDateTime(new TimeOnly(0,0,0)), weekAfterNow.ToDateTime(new TimeOnly(0,0,0))).ToArray();
 		foreach (var day in week)
 		{
-			var date = day.Date;
+			var date = DateOnly.FromDateTime(day.Date);
 			if (!weatherWeek.Contains(date))
 			{
 				logger.LogInformation("Add weather for date {Date}", date.ToString("d"));
 				database.Context.Add(new WeatherForecast
 				{
+					WeatherForecastId = Guid.NewGuid(),
 					Date = date,
 					Summary = "Cold",
 					TemperatureC = 0

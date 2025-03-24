@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -6,7 +7,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using RichWebApi.Config;
+using RichWebApi.Entities.Identity;
 using RichWebApi.Persistence.Interceptors;
+using RichWebApi.Services;
 using RichWebApi.Tests.NSubstitute;
 
 namespace RichWebApi.Tests.DependencyInjection;
@@ -37,7 +40,10 @@ public static class DependencyContainerFixtureExtensions
 						configure?.Invoke(builder);
 					}, ServiceLifetime.Transient, ServiceLifetime.Transient)
 					.AddDependencyServices(dependencies, partsToScan)
+					.AddIdentity<RichWebApiUser, RichWebApiRole>()
+					.AddEntityFrameworkStores<RichWebApiDbContext>()
 				)
+				.ReplaceWithEmptyMock<IIdentityProvider>()
 			.ReplaceWithMock<IOptionsMonitor<DatabaseEntitiesConfig>>((sp, mock) =>
 				mock.CurrentValue
 					.Returns(new DatabaseEntitiesConfig

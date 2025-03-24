@@ -5,7 +5,7 @@ namespace RichWebApi.Models;
 
 public class WeatherForecastDto : IAuditableDto
 {
-	public DateTime Date { get; set; }
+	public DateOnly Date { get; set; }
 
 	public int TemperatureC { get; set; }
 
@@ -13,16 +13,17 @@ public class WeatherForecastDto : IAuditableDto
 
 	public string Summary { get; set; } = null!;
 
-	public DateTime CreatedAt { get; set; }
+	public DateTimeOffset CreatedAt { get; set; }
 
-	public DateTime ModifiedAt { get; set; }
+	public DateTimeOffset? ModifiedAt { get; set; }
 
 	[UsedImplicitly]
 	public class Validator : AbstractValidator<WeatherForecastDto>
 	{
 		public Validator()
 		{
-			RuleFor(x => x.Date).GreaterThanOrEqualTo(new DateTime(2023, 1, 1, 0, 0, 0, 0, 0));
+			var date = new DateOnly(2023, 1, 1);
+			RuleFor(x => x.Date).GreaterThanOrEqualTo(date);
 			RuleFor(x => x.TemperatureC).InclusiveBetween(-100, 100);
 			RuleFor(x => x.Summary).NotNull().NotEmpty().MaximumLength(500);
 		}

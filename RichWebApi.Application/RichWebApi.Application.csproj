@@ -26,6 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\RichWebApi.Dependencies.Auth\RichWebApi.Dependencies.Auth.csproj" />
       <ProjectReference Include="..\RichWebApi\RichWebApi.csproj" />
       <ProjectReference Include="..\RichWebApi.Dependencies.Database.Migrations\RichWebApi.Dependencies.Database.Migrations.csproj" />
       <ProjectReference Include="..\RichWebApi.Dependencies.Database\RichWebApi.Dependencies.Database.csproj" />
