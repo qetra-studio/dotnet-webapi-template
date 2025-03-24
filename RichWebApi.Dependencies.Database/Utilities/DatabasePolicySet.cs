@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Polly.Retry;
 using Polly.Timeout;
 
 namespace RichWebApi.Utilities;
@@ -19,10 +20,10 @@ internal sealed class DatabasePolicySet(ILogger<DatabasePolicySet> logger) : IDa
 			CommonTimeoutPerTry(TimeSpan.FromSeconds(60)).WithPolicyKey("Database write timeout"))
 		.WithPolicyKey(nameof(DatabaseWritePolicy));
 
-	private IAsyncPolicy CommonTimeoutPerTry(TimeSpan timeSpan)
+	private AsyncTimeoutPolicy CommonTimeoutPerTry(TimeSpan timeSpan)
 		=> Policy.TimeoutAsync(timeSpan, TimeoutStrategy.Pessimistic, LogTimeoutAsync);
 
-	private IAsyncPolicy CommonWaitAndRetryOn<T1, T2, T3>(int times)
+	private AsyncRetryPolicy CommonWaitAndRetryOn<T1, T2, T3>(int times)
 		where T1 : Exception
 		where T2 : Exception
 		where T3 : Exception

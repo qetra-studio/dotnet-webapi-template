@@ -2,7 +2,6 @@
 using FluentValidation;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RichWebApi.Entities.Configuration;
 
 namespace RichWebApi.Entities.Identity;
