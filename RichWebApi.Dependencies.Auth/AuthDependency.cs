@@ -74,14 +74,12 @@ internal class AuthDependency : IAppDependency
 		return;
 
 		IReadOnlyDictionary<string, RsaSecurityKey> UpdateSigningKeys(AuthConfig cfg)
-		{
-			return cfg.RsaKeys.ToDictionary(x => x.Key, x =>
+			=> cfg.RsaKeys.ToDictionary(x => x.Key, x =>
 			{
 				var rsa = RSA.Create();
 				rsa.ImportRSAPublicKey(Convert.FromBase64String(x.Value.Public), out _);
 				return new RsaSecurityKey(rsa);
 			});
-		}
 	}
 
 	public void ConfigureApplication(IApplicationBuilder builder)

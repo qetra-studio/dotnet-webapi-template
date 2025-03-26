@@ -42,7 +42,6 @@ internal sealed class JwtTokenIssuer(IOptionsMonitor<AuthConfig> config,
 		IEnumerable<Claim> GetClaims(RichWebApiUser u)
 		{
 			yield return new Claim(JwtRegisteredClaimNames.Sub, u.Id.ToString("N"));
-			yield return new Claim("scope", "weather");
 		}
 	}
 }

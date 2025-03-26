@@ -1,3 +1,9 @@
-﻿namespace RichWebApi.Services;
+﻿using RichWebApi.Entities.Identity;
+using RichWebApi.Utilities;
 
-public interface IRichWebApiUserContextAccessor : IIdentityProvider;
+namespace RichWebApi.Services;
+
+public interface IRichWebApiUserContextAccessor : IIdentityProvider
+{
+	AsyncLazy<RichWebApiUser?> User { get; }
+}
