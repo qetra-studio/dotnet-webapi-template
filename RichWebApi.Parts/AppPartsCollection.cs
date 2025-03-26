@@ -7,7 +7,7 @@ public sealed class AppPartsCollection : IAppPartsCollection
 {
 	private readonly HashSet<IAppPart> _appParts = new(new TypeEqualityComparer<IAppPart>())
 	{
-		new PartsCore()
+		new Core()
 	};
 
 	[MustDisposeResource]

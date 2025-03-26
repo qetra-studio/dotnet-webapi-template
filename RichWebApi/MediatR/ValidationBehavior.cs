@@ -28,7 +28,7 @@ public sealed class ValidationBehavior<TRequest, TResponse>(
 				var errors = failures.SelectMany(x => x.Errors).ToArray();
 				logger.LogWarning("Validation failed for {Request}, failures: {@Failures}", request,
 					errors.Select(e => new { e.ErrorMessage, e.PropertyName, e.ErrorCode }));
-				throw new RichWebApiValidationException(errors.Select(f => f.ErrorMessage));
+				throw new RichWebApiValidationException(errors);
 			}
 		}, "MediatR request validation");
 

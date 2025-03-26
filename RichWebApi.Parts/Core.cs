@@ -2,7 +2,7 @@
 
 namespace RichWebApi;
 
-internal class PartsCore : IAppPart
+internal class Core : IAppPart
 {
 	public void ConfigureServices(IServiceCollection services)
 	{

@@ -1,10 +1,10 @@
-﻿namespace RichWebApi.Parts.Auth;
+﻿namespace RichWebApi;
 
 public static class AppDependenciesCollectionExtensions
 {
 	public static IAppDependenciesCollection AddAuth(this IAppDependenciesCollection dependencies)
 	{
-		dependencies.Add(new AuthPart());
+		dependencies.Add(new AuthDependency());
 		return dependencies;
 	}
 }

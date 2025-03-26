@@ -1,11 +1,12 @@
 ﻿using AutoMapper.EquivalencyExpression;
+using Destructurama;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
+using RichWebApi.Filters;
 using RichWebApi.HealthChecks;
 using RichWebApi.Maintenance;
 using RichWebApi.Middleware;
-using RichWebApi.Parts.Auth;
 using RichWebApi.Startup;
 using Serilog;
 using Serilog.Events;
@@ -26,7 +27,7 @@ public class Program
 
 			var dependencies = EnrichWithDependencies(new AppDependenciesCollection(), builder.Environment);
 			var parts = EnrichWithApplicationParts(new AppPartsCollection());
-
+			
 			ConfigureServices(builder.Services, parts, dependencies);
 
 			var app = ConfigureWebApp(builder.Build(), dependencies);
@@ -38,6 +39,7 @@ public class Program
 		}
 		catch (Exception e)
 		{
+			Console.WriteLine(e);
 			Log.Error(e, "Application exited with error");
 		}
 		finally
@@ -87,6 +89,7 @@ public class Program
 
 			loggerConfiguration
 				.ReadFrom.Configuration(context.Configuration)
+				.Destructure.UsingAttributes()
 				.Enrich.FromLogContext()
 				.Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
 				.Enrich.WithThreadId();
@@ -103,9 +106,10 @@ public class Program
 
 	private static IAppDependenciesCollection EnrichWithDependencies(IAppDependenciesCollection collection,
 																	 IWebHostEnvironment env)
-		=> collection.AddDatabase(env)
-			.AddSignalR(c => c.AddWeather())
-			.AddAuth();
+		=> collection
+			.AddAuth()
+			.AddDatabase(env)
+			.AddSignalR(c => c.AddWeather());
 
 	public static IAppPartsCollection EnrichWithApplicationParts(IAppPartsCollection collection)
 		=> collection.AddWeather();
@@ -114,11 +118,43 @@ public class Program
 														IAppPartsCollection parts,
 														IAppDependenciesCollection dependencies)
 	{
+		services.AddCore();
+		services.AddDependencyServices(dependencies, parts);
+		services.AddMvcCore(x =>
+		{
+			x.Filters.Add<ExceptionFilter>();
+		}).AddApplicationPart(typeof(Program).Assembly);
+		services.CollectCoreServicesFromAssembly(typeof(Program).Assembly);
+		services.AddAppParts(parts);
 		services.AddControllers();
-		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+		
 		services.AddEndpointsApiExplorer();
 		services.AddSwaggerGen(s =>
 		{
+			s.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+			{
+				Name = "Authorization",
+				Type = SecuritySchemeType.Http,
+				Scheme = "bearer",
+				BearerFormat = "JWT",
+				In = ParameterLocation.Header,
+				Description = "Please enter your JWT token"
+			});
+			
+			s.AddSecurityRequirement(new OpenApiSecurityRequirement
+			{
+				{
+					new OpenApiSecurityScheme
+					{
+						Reference = new OpenApiReference
+						{
+							Type = ReferenceType.SecurityScheme,
+							Id = "Bearer"
+						}
+					},
+					[]
+				}
+			});
 			s.SwaggerDoc("v1", new OpenApiInfo
 			{
 				Title = "RichWebApi",
@@ -131,12 +167,7 @@ public class Program
 		services.AddHealthChecks();
 
 		services.AddAutoMapper(x => x.AddCollectionMappers(), typeof(Program).Assembly);
-
-
-		services.AddCore();
-		services.AddAppParts(parts);
-		services.AddDependencyServices(dependencies, parts);
-
+		
 		services.AddStartupAction<AutoMapperValidationAction>();
 		return services;
 	}
@@ -160,7 +191,6 @@ public class Program
 		app.MapControllers();
 		app.UseRouting();
 
-		app.UseAuthorization();
 		app.UseDependencies(dependencies);
 
 		return app;

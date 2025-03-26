@@ -4,12 +4,16 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>RichWebApi.Parts.Auth</RootNamespace>
+        <RootNamespace>RichWebApi</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\RichWebApi.Dependencies.Database\RichWebApi.Dependencies.Database.csproj" />
       <ProjectReference Include="..\RichWebApi.Dependencies\RichWebApi.Dependencies.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
     </ItemGroup>
 
 </Project>

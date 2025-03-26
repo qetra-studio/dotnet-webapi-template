@@ -72,5 +72,5 @@ public static class ServiceCollectionExtensions
 
 	public static IServiceCollection CollectCoreServicesFromAssembly(this IServiceCollection services,
 																	 Assembly assembly)
-		=> services.CollectCoreServicesFromAssemblies(new[] { assembly });
+		=> services.CollectCoreServicesFromAssemblies([assembly]);
 }
