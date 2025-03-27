@@ -32,6 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{7C0470FC-1
 		README.md = README.md
 		yarn.lock = yarn.lock
 		services.docker-compose.yaml = services.docker-compose.yaml
+		global.json = global.json
+		.config\dotnet-tools.json = .config\dotnet-tools.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nix", "nix", "{D6C11702-27B4-4F33-A24F-7DB36F8F8C8A}"

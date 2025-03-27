@@ -20,11 +20,6 @@ using RichWebApi.Validation;
 
 namespace RichWebApi;
 
-public sealed class DatabaseDependencyOptions
-{
-	public bool SkipDatabaseClientSetup { get; set; }
-}
-
 internal class DatabaseDependency(IHostEnvironment environment, DatabaseDependencyOptions options) : IAppDependency
 {
 	private const string ConfigurationSection = "Database";

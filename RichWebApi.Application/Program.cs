@@ -1,4 +1,5 @@
-﻿using AutoMapper.EquivalencyExpression;
+﻿using Autofac.Extensions.DependencyInjection;
+using AutoMapper.EquivalencyExpression;
 using Destructurama;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -74,7 +75,9 @@ public class Program
 			.AddUserSecrets<Program>(true, true);
 
 	private static IHostBuilder ConfigureHost(IHostBuilder host)
-		=> host.UseSerilog((context, sp, loggerConfiguration) =>
+		=> host
+			.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+		.UseSerilog((context, sp, loggerConfiguration) =>
 		{
 			// When something wrong with logging - uncomment the line below
 			// Serilog.Debugging.SelfLog.Enable(Console.Error);

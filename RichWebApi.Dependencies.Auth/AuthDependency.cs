@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RichWebApi.Config;
@@ -20,15 +21,19 @@ internal class AuthDependency : IAppDependency
 {
 	public void ConfigureServices(IServiceCollection services, IAppPartsCollection parts)
 	{
-		services.AddIdentity<RichWebApiUser, RichWebApiRole>()
+		services.AddIdentity<RichWebApiUser, RichWebApiRole>(options =>
+			{
+				options.User.RequireUniqueEmail = true;
+			})
 			.AddEntityFrameworkStores<RichWebApiDbContext>()
 			.AddDefaultTokenProviders();
 		services.AddOptionsWithValidator<AuthConfig, AuthConfig.Validator>("Dependencies:Auth");
 		services.AddOptionsWithValidator<BearerConfig, BearerConfig.Validator>("Dependencies:Auth:Bearer");
+		services.AddOptionsWithValidator<MfaConfig, MfaConfig.Validator>("Dependencies:Auth:Mfa");
 
 		services.AddSingleton<IJwtTokenIssuer, JwtTokenIssuer>();
-		services.AddScoped<IRichWebApiUserContextAccessor, RichWebApiUserContextAccessor>();
-		services.AddScoped<IIdentityProvider>(sp => sp.GetRequiredService<IRichWebApiUserContextAccessor>());
+		services.TryAddScoped<IRichWebApiUserContextAccessor, RichWebApiUserContextAccessor>();
+		services.TryAddScoped<IIdentityProvider>(sp => new AuthIdentityProvider(new Lazy<IRichWebApiUserContextAccessor>(sp.GetRequiredService<IRichWebApiUserContextAccessor>)));
 
 		var sp = services.BuildServiceProvider();
 		var authConfig = sp.GetRequiredService<IOptionsMonitor<AuthConfig>>();

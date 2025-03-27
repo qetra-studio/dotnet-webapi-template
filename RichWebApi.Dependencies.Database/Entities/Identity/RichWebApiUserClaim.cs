@@ -9,7 +9,6 @@ namespace RichWebApi.Entities.Identity;
 [Table("UserClaims", Schema = "Identity")]
 public class RichWebApiUserClaim : IdentityUserClaim<Guid>, IAuditableEntity
 {
-	public RichWebApiUser User { get; set; } = null!;
 
 	public Guid? CreatedById { get; set; }
 

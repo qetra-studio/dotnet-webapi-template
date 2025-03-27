@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Destructurama.Attributed;
 using FluentValidation;
 using JetBrains.Annotations;
 using RichWebApi.Validation;
@@ -7,14 +8,19 @@ namespace RichWebApi.Config;
 
 internal class DatabaseConnectionConfig : IAppConfig
 {
+	[NotLogged]
 	public string Password { get; set; } = null!;
 
+	[NotLogged]
 	public ushort Port { get; set; }
 
+	[NotLogged]
 	public string Host { get; set; } = null!;
 
+	[NotLogged]
 	public string Username { get; set; } = null!;
 
+	[NotLogged]
 	public string DbInstanceIdentifier { get; set; } = null!;
 
 	public int Retries { get; set; }

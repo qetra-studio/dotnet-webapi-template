@@ -17,6 +17,26 @@ internal sealed class JwtTokenIssuer(IOptionsMonitor<AuthConfig> config,
 
 	public Task<string> IssueUserTokenAsync(RichWebApiUser user, CancellationToken cancellationToken)
 	{
+		return IssueTokenAsync(new ClaimsIdentity(GetClaims(user)), clock.UtcNow.UtcDateTime.AddHours(1));
+
+		IEnumerable<Claim> GetClaims(RichWebApiUser u)
+		{
+			yield return new Claim(JwtRegisteredClaimNames.Sub, u.Id.ToString("N"));
+		}
+	}
+	
+	public Task<string> IssueTwoFactorTokenAsync(RichWebApiUser user, CancellationToken cancellationToken)
+	{
+		return IssueTokenAsync(new ClaimsIdentity(GetClaims(user)), clock.UtcNow.UtcDateTime.AddMinutes(5));
+
+		IEnumerable<Claim> GetClaims(RichWebApiUser u)
+		{
+			yield return new Claim(JwtRegisteredClaimNames.Sub, u.Id.ToString("N"));
+		}
+	}
+
+	private Task<string> IssueTokenAsync(ClaimsIdentity identity, DateTime expires)
+	{
 		var keys = config.CurrentValue.RsaKeys;
 		var k = keys.ElementAt(_random.Next(0, keys.Count));
 		var rsa = RSA.Create();
@@ -29,8 +49,8 @@ internal sealed class JwtTokenIssuer(IOptionsMonitor<AuthConfig> config,
 		var tokenHandler = new JwtSecurityTokenHandler();
 		var tokenDescriptor = new SecurityTokenDescriptor
 		{
-			Subject = new ClaimsIdentity(GetClaims(user)),
-			Expires = clock.UtcNow.UtcDateTime.AddHours(1),
+			Subject = identity,
+			Expires = expires,
 			SigningCredentials = credentials,
 			Audience = bearerConfig.CurrentValue.Audience,
 			Issuer	= bearerConfig.CurrentValue.Issuer
@@ -38,10 +58,5 @@ internal sealed class JwtTokenIssuer(IOptionsMonitor<AuthConfig> config,
 
 		var token = tokenHandler.CreateToken(tokenDescriptor);
 		return Task.FromResult(tokenHandler.WriteToken(token));
-
-		IEnumerable<Claim> GetClaims(RichWebApiUser u)
-		{
-			yield return new Claim(JwtRegisteredClaimNames.Sub, u.Id.ToString("N"));
-		}
 	}
 }

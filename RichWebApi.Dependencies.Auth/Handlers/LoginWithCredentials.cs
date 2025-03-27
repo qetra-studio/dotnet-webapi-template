@@ -11,10 +11,10 @@ using RichWebApi.Services;
 
 namespace RichWebApi.Handlers;
 
-public record Login(LoginDto Credentials) : IRequest<IActionResult>
+public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResult>
 {
 	[UsedImplicitly]
-	public class Validator : AbstractValidator<Login>
+	public class Validator : AbstractValidator<LoginWithCredentials>
 	{
 		public Validator(IValidator<LoginDto> v) => RuleFor(x => x.Credentials).SetValidator(v);
 	}
@@ -24,9 +24,9 @@ public record Login(LoginDto Credentials) : IRequest<IActionResult>
 		SignInManager<RichWebApiUser> signInManager,
 		IJwtTokenIssuer jwtTokenIssuer,
 		UserManager<RichWebApiUser> userManager)
-		: IRequestHandler<Login, IActionResult>
+		: IRequestHandler<LoginWithCredentials, IActionResult>
 	{
-		public async Task<IActionResult> Handle(Login request, CancellationToken cancellationToken)
+		public async Task<IActionResult> Handle(LoginWithCredentials request, CancellationToken cancellationToken)
 		{
 			var username = await FindUsernameAsync(request.Credentials);
 			if (string.IsNullOrEmpty(username))
@@ -47,21 +47,23 @@ public record Login(LoginDto Credentials) : IRequest<IActionResult>
 
 			var result = await signInManager.CheckPasswordSignInAsync(user, request.Credentials.Password, true);
 
+			if (await userManager.GetTwoFactorEnabledAsync(user))
+			{
+				var token = await jwtTokenIssuer.IssueTwoFactorTokenAsync(user, cancellationToken);
+				return new ObjectResult(new AuthActionRequiredDto
+				{
+					ErrorCode = "two_factor_required",
+					Message = "Complete 2FA in order to continue.",
+					AccessToken = token
+				});
+			}
+			
 			if (result.Succeeded)
 			{
 				var token = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
 				return new ObjectResult(new AuthSuccessDto
 				{
 					AccessToken = token
-				});
-			}
-
-			if (result.RequiresTwoFactor)
-			{
-				return new UnauthorizedObjectResult(new AuthErrorDto
-				{
-					ErrorCode = "two_factor_required",
-					Message = "Complete 2FA in order to continue."
 				});
 			}
 

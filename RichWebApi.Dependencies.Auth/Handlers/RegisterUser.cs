@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RichWebApi.Entities.Identity;
+using RichWebApi.Extensions;
 using RichWebApi.Models;
 
 namespace RichWebApi.Handlers;
@@ -29,17 +30,9 @@ public record RegisterUser(RegisterDto Credentials) : IRequest<IActionResult>
 				PhoneNumber = request.Credentials.PhoneNumber
 			}, request.Credentials.Password);
 
-			if (result.Succeeded)
-			{
-				return new OkResult();
-			}
-
-			var errors = result.Errors.Select(x => new AuthErrorDto
-			{
-				ErrorCode = x.Code,
-				Message = x.Description
-			}).ToArray();
-			return new BadRequestObjectResult(errors);
+			return result.Succeeded
+				? new OkResult()
+				: result.ToBadRequestResult();
 
 			async Task<Guid> FindNewIdAsync()
 			{

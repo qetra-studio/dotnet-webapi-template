@@ -3,7 +3,8 @@ using RichWebApi.Utilities;
 
 namespace RichWebApi.Services;
 
-public interface IRichWebApiUserContextAccessor : IIdentityProvider
+public interface IRichWebApiUserContextAccessor
 {
+	Guid? UserId { get; }
 	AsyncLazy<RichWebApiUser?> User { get; }
 }
