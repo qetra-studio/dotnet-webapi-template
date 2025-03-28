@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using RichWebApi.Config;
+using RichWebApi.Extensions;
 using RichWebApi.Services;
 using RichWebApi.Startup;
 using RichWebApi.Validation;
@@ -17,6 +18,6 @@ internal class WeatherPart : IAppPart
 		services.AddCronService<WeatherWeekFillerService>();
 		services.AddStartupAction<FillWeatherWeekAction>();
 		services.AddAuthorizationBuilder()
-			.AddPolicy("weather", x => x.RequireClaim("scope", "weather"));
+			.AddAccessPolicy("weather", x => x.RequireClaim("scope", "weather"));
 	}
 }

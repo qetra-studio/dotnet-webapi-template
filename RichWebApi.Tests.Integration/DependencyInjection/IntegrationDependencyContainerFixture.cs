@@ -14,7 +14,7 @@ namespace RichWebApi.Tests.DependencyInjection;
 public class IntegrationDependencyContainerFixture : DependencyContainerFixture
 {
 	private static readonly IReadOnlyList<ClientDescriptor> apiClientsToRegister;
-	private readonly IDictionary<Type, List<Action<IServiceProvider, HttpClient>>> _clientConfigurators;
+	private readonly Dictionary<Type, List<Action<IServiceProvider, HttpClient>>> _clientConfigurators;
 
 	static IntegrationDependencyContainerFixture()
 		=> apiClientsToRegister = ScanForClients(typeof(IntegrationTest).Assembly);

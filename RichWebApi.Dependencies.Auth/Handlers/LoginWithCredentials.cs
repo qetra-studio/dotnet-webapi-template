@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RichWebApi.Entities.Identity;
@@ -38,10 +39,16 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 
 			if (user == null)
 			{
-				return new UnauthorizedObjectResult(new AuthErrorDto
+				return new UnauthorizedObjectResult(new AuthErrorResponseDto
 				{
-					ErrorCode = "invalid_credentials",
-					Message = "Login attempt failed."
+					Errors =
+					[
+						new AuthErrorDto
+						{
+							ErrorCode = "invalid_credentials",
+							Message = "Login attempt failed."
+						}
+					]
 				});
 			}
 
@@ -55,9 +62,12 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 					ErrorCode = "two_factor_required",
 					Message = "Complete 2FA in order to continue.",
 					AccessToken = token
-				});
+				})
+				{
+					StatusCode = StatusCodes.Status302Found
+				};
 			}
-			
+
 			if (result.Succeeded)
 			{
 				var token = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
@@ -69,10 +79,16 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 
 			if (result.IsLockedOut)
 			{
-				return new UnauthorizedObjectResult(new AuthErrorDto
+				return new UnauthorizedObjectResult(new AuthErrorResponseDto
 				{
-					ErrorCode = "locked_out",
-					Message = "Locked out, try to login later."
+					Errors =
+					[
+						new AuthErrorDto
+						{
+							ErrorCode = "locked_out",
+							Message = "Locked out, try to login later."
+						}
+					]
 				});
 			}
 

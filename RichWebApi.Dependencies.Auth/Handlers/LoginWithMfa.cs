@@ -14,12 +14,15 @@ public record LoginWithMfa(VerifyMfaDto Mfa) : IRequest<IActionResult>
 	[UsedImplicitly]
 	public class Validator : AbstractValidator<LoginWithMfa>
 	{
-		public Validator(IValidator<VerifyMfaDto> validator) 
+		public Validator(IValidator<VerifyMfaDto> validator)
 			=> RuleFor(x => x.Mfa).SetValidator(validator);
 	}
 
 	[UsedImplicitly]
-	internal class LoginWithMfaHandler(IRichWebApiUserContextAccessor accessor, UserManager<RichWebApiUser> manager, IJwtTokenIssuer jwtTokenIssuer) : IRequestHandler<LoginWithMfa, IActionResult>
+	internal class LoginWithMfaHandler(
+		IRichWebApiUserContextAccessor accessor,
+		UserManager<RichWebApiUser> manager,
+		IJwtTokenIssuer jwtTokenIssuer) : IRequestHandler<LoginWithMfa, IActionResult>
 	{
 		public async Task<IActionResult> Handle(LoginWithMfa request, CancellationToken cancellationToken)
 		{
@@ -31,16 +34,22 @@ public record LoginWithMfa(VerifyMfaDto Mfa) : IRequest<IActionResult>
 
 			var isValid = await manager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider,
 				request.Mfa.Token);
-			
+
 			if (!isValid)
 			{
-				return new BadRequestObjectResult(new AuthErrorDto
+				return new UnauthorizedObjectResult(new AuthErrorResponseDto()
 				{
-					ErrorCode = "invalid_token",
-					Message = "Provided token is invalid."
+					Errors =
+					[
+						new AuthErrorDto
+						{
+							ErrorCode = "invalid_token",
+							Message = "Provided token is invalid."
+						}
+					]
 				});
 			}
-			
+
 			var token = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
 			return new ObjectResult(new AuthSuccessDto
 			{

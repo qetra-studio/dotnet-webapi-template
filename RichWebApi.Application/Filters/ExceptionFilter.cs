@@ -15,10 +15,10 @@ public class ExceptionFilter : IExceptionFilter
 		switch (context.Exception)
 		{
 			case RichWebApiValidationException ve:
-				var errors = new Dictionary<string, List<object>>();
+				var errors = new Dictionary<string, List<ValidationErrorDto>>();
 				foreach (var validationFailure in ve.Errors)
 				{
-					var error = new ErrorDto
+					var error = new ValidationErrorDto
 					{
 						ErrorCode = validationFailure.ErrorCode,
 						Message = validationFailure.ErrorMessage,
@@ -39,7 +39,11 @@ public class ExceptionFilter : IExceptionFilter
 					}
 				}
 
-				context.Result = new ObjectResult(errors) { StatusCode = StatusCodes.Status400BadRequest };
+				context.Result = new ObjectResult(new ValidationResponseDto
+				{
+					Errors = errors.ToDictionary(x => x.Key, x => x.Value.ToArray())
+				})
+				{ StatusCode = StatusCodes.Status400BadRequest };
 				break;
 			default:
 				logger.LogError(context.Exception, "Unhandled exception during request execution");

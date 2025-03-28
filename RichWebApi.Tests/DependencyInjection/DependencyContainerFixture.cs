@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
+using RichWebApi.Tests.Fakers;
 
 namespace RichWebApi.Tests.DependencyInjection;
 
@@ -18,6 +19,7 @@ public abstract class DependencyContainerFixture : IDisposable
 
 	public IServiceProvider BuildServiceProvider()
 		=> ConfigureSharedServices(_services)
+			.AddSingleton<IFakerFactory, FakerFactory>()
 			.BuildServiceProvider();
 
 	public void Dispose() => _services.Clear();

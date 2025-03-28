@@ -103,6 +103,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RichWebApi.WeatherForecast.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RichWebApi.Dependencies.Auth", "RichWebApi.Dependencies.Auth\RichWebApi.Dependencies.Auth.csproj", "{EBCE5AF6-0F9A-4326-8E52-AE6D8ED761FE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RichWebApi.Dependencies.Auth.Tests.Integration", "RichWebApi.Dependencies.Auth.Tests.Integration\RichWebApi.Dependencies.Auth.Tests.Integration.csproj", "{6A9243E0-368C-4457-8027-02D95D5CB11D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -177,6 +179,10 @@ Global
 		{EBCE5AF6-0F9A-4326-8E52-AE6D8ED761FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBCE5AF6-0F9A-4326-8E52-AE6D8ED761FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBCE5AF6-0F9A-4326-8E52-AE6D8ED761FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A9243E0-368C-4457-8027-02D95D5CB11D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A9243E0-368C-4457-8027-02D95D5CB11D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A9243E0-368C-4457-8027-02D95D5CB11D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A9243E0-368C-4457-8027-02D95D5CB11D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E40723F9-86E9-42AB-9BAA-E52D3251D98A} = {2504DDD8-13F0-4E1E-88E3-F940F25E1AA8}
@@ -207,5 +213,6 @@ Global
 		{0D8FB9B0-B026-43E3-9800-5284DA77EFF7} = {266BFFBE-7340-426C-ADD6-F8F3453A6D6E}
 		{D8AA6BE5-F13B-4E8A-84A5-12CFF58A9F2B} = {266BFFBE-7340-426C-ADD6-F8F3453A6D6E}
 		{EBCE5AF6-0F9A-4326-8E52-AE6D8ED761FE} = {E7D89A8D-9835-4A6D-BA2C-97C75CAB1893}
+		{6A9243E0-368C-4457-8027-02D95D5CB11D} = {266BFFBE-7340-426C-ADD6-F8F3453A6D6E}
 	EndGlobalSection
 EndGlobal

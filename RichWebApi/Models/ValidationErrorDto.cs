@@ -2,7 +2,7 @@
 
 namespace RichWebApi.Models;
 
-public class ErrorDto
+public class ValidationErrorDto
 {
 	public required string ErrorCode { get; init; }
 	public required string Message { get; init; }

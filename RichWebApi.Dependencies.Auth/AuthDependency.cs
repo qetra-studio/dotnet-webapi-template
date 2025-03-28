@@ -10,6 +10,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RichWebApi.Config;
 using RichWebApi.Entities.Identity;
+using RichWebApi.Enums;
+using RichWebApi.Extensions;
 using RichWebApi.Services;
 using RichWebApi.Validation;
 
@@ -30,7 +32,6 @@ internal class AuthDependency : IAppDependency
 		services.AddOptionsWithValidator<AuthConfig, AuthConfig.Validator>("Dependencies:Auth");
 		services.AddOptionsWithValidator<BearerConfig, BearerConfig.Validator>("Dependencies:Auth:Bearer");
 		services.AddOptionsWithValidator<MfaConfig, MfaConfig.Validator>("Dependencies:Auth:Mfa");
-
 		services.AddSingleton<IJwtTokenIssuer, JwtTokenIssuer>();
 		services.TryAddScoped<IRichWebApiUserContextAccessor, RichWebApiUserContextAccessor>();
 		services.TryAddScoped<IIdentityProvider>(sp => new AuthIdentityProvider(new Lazy<IRichWebApiUserContextAccessor>(sp.GetRequiredService<IRichWebApiUserContextAccessor>)));
@@ -75,6 +76,9 @@ internal class AuthDependency : IAppDependency
 					ValidAudience = bearerConfig.CurrentValue.Audience,
 				};
 			});
+
+		services.AddAuthorizationBuilder()
+			.AddDefaultPolicy("access", x => x.RequirePurpose(RichWebApiJwtPurpose.Access));
 
 		return;
 

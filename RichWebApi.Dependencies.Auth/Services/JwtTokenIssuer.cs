@@ -1,17 +1,19 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RichWebApi.Config;
+using RichWebApi.Constants;
 using RichWebApi.Entities.Identity;
+using RichWebApi.Enums;
 
 namespace RichWebApi.Services;
 
 internal sealed class JwtTokenIssuer(IOptionsMonitor<AuthConfig> config,
-                                     IOptionsMonitor<BearerConfig> bearerConfig,
-                                     ISystemClock clock) : IJwtTokenIssuer
+									 IOptionsMonitor<BearerConfig> bearerConfig,
+									 ISystemClock clock) : IJwtTokenIssuer
 {
 	private readonly Random _random = new();
 
@@ -22,9 +24,10 @@ internal sealed class JwtTokenIssuer(IOptionsMonitor<AuthConfig> config,
 		IEnumerable<Claim> GetClaims(RichWebApiUser u)
 		{
 			yield return new Claim(JwtRegisteredClaimNames.Sub, u.Id.ToString("N"));
+			yield return PurposeClaim(RichWebApiJwtPurpose.Access);
 		}
 	}
-	
+
 	public Task<string> IssueTwoFactorTokenAsync(RichWebApiUser user, CancellationToken cancellationToken)
 	{
 		return IssueTokenAsync(new ClaimsIdentity(GetClaims(user)), clock.UtcNow.UtcDateTime.AddMinutes(5));
@@ -32,6 +35,7 @@ internal sealed class JwtTokenIssuer(IOptionsMonitor<AuthConfig> config,
 		IEnumerable<Claim> GetClaims(RichWebApiUser u)
 		{
 			yield return new Claim(JwtRegisteredClaimNames.Sub, u.Id.ToString("N"));
+			yield return PurposeClaim(RichWebApiJwtPurpose.Mfa);
 		}
 	}
 
@@ -53,10 +57,13 @@ internal sealed class JwtTokenIssuer(IOptionsMonitor<AuthConfig> config,
 			Expires = expires,
 			SigningCredentials = credentials,
 			Audience = bearerConfig.CurrentValue.Audience,
-			Issuer	= bearerConfig.CurrentValue.Issuer
+			Issuer = bearerConfig.CurrentValue.Issuer
 		};
 
 		var token = tokenHandler.CreateToken(tokenDescriptor);
 		return Task.FromResult(tokenHandler.WriteToken(token));
 	}
+
+	private static Claim PurposeClaim(RichWebApiJwtPurpose purpose)
+		=> new(RichWebApiJwtClaimTypes.Purpose, purpose.ToString("G").ToLower());
 }
