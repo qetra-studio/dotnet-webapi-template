@@ -3,6 +3,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using RichWebApi.Tests.Exceptions;
+using RichWebApi.Tests.Extensions;
 
 namespace RichWebApi.Tests.Resources;
 

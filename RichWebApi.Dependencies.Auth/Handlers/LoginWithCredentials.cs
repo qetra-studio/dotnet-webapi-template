@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -73,7 +74,8 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 				var token = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
 				return new ObjectResult(new AuthSuccessDto
 				{
-					AccessToken = token
+					AccessToken = token,
+					TokenType = JwtBearerDefaults.AuthenticationScheme
 				});
 			}
 

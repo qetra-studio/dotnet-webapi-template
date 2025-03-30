@@ -9,8 +9,12 @@ namespace RichWebApi.Entities.Identity;
 [Table("Users", Schema = "Identity")]
 public class RichWebApiUser : IdentityUser<Guid>, IDateAuditableEntity
 {
+
+	public DateTimeOffset? PhoneNumberConfirmedAt { get; set; }
+
+
 	public DateTimeOffset? EmailConfirmedAt { get; set; }
-	
+
 	public DateTimeOffset? TwoFactorEnabledAt { get; set; }
 
 	public DateTimeOffset CreatedAt { get; set; }

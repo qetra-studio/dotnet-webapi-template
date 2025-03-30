@@ -148,6 +148,10 @@ namespace RichWebApi.Tests.Client
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string AccessToken { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("tokenType", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string TokenType { get; set; } = default!;
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]

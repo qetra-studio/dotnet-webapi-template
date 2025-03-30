@@ -10,5 +10,7 @@ public static class AuthClientFakers
 			.RuleSet("random", ruleSet => ruleSet
 				.RuleFor(x => x.Email, x => x.Internet.Email())
 				.RuleFor(x => x.UserName, x => x.Internet.UserName())
-				.RuleFor(x => x.Password, x => x.Internet.Password(length: 32, prefix: "!Va1id.")));
+				.RuleFor(x => x.Password, x => x.Internet.Password(length: 32, prefix: "!Va1id.")))
+			.RuleSet("phonenumber", ruleSet => ruleSet
+				.RuleFor(x => x.PhoneNumber, x => x.Phone.PhoneNumber("+###-###-####")));
 }

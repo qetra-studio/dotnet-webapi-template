@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RichWebApi.Tests.Client;
 using RichWebApi.Tests.DependencyInjection;
+using RichWebApi.Tests.Extensions;
 using RichWebApi.Tests.Logging;
 using Xunit.Abstractions;
 

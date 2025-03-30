@@ -1,0 +1,7 @@
+﻿namespace RichWebApi.Tests.Enums;
+
+public enum LoginValueKind : byte
+{
+	UserName,
+	Email
+}

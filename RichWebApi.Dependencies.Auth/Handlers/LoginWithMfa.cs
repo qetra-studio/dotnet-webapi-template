@@ -1,8 +1,12 @@
-﻿using FluentValidation;
+﻿using System.Text.Json;
+using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.HttpSys;
 using RichWebApi.Entities.Identity;
 using RichWebApi.Models;
 using RichWebApi.Services;
@@ -53,7 +57,8 @@ public record LoginWithMfa(VerifyMfaDto Mfa) : IRequest<IActionResult>
 			var token = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
 			return new ObjectResult(new AuthSuccessDto
 			{
-				AccessToken = token
+				AccessToken = token,
+				TokenType = JwtBearerDefaults.AuthenticationScheme
 			});
 		}
 	}

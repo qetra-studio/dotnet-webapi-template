@@ -3,4 +3,4 @@
 namespace RichWebApi.Mappers;
 
 [UsedImplicitly]
-public class WeatherMappingProfile : MappingCollectorProfile;
+public sealed class AuthProfile : MappingCollectorProfile;

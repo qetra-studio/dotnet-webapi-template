@@ -3,6 +3,7 @@ using FluentAssertions;
 using FluentAssertions.Equivalency;
 using Newtonsoft.Json;
 using RichWebApi.Tests.Exceptions;
+using RichWebApi.Tests.Extensions;
 using Xunit.Abstractions;
 
 namespace RichWebApi.Tests.Resources;

@@ -8,7 +8,7 @@ public static class MappingExpressionExtensions
 {
 	public static IMappingExpression<TSource, TDestination> IgnoreAuditableProperties<TSource, TDestination>(
 		this IMappingExpression<TSource, TDestination> expr)
-		where TSource : class, IAuditableDto
+		where TSource : class, IDateAuditableDto
 		where TDestination : class, IDateAuditableEntity
 		=> expr.IgnoreMember(x => x.CreatedAt)
 			.IgnoreMember(x => x.ModifiedAt);

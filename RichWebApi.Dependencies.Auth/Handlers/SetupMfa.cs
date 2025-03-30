@@ -38,7 +38,7 @@ public record SetupMfa : IRequest<IActionResult>
 			{
 				return result.ToUnauthorizedResult();
 			}
-			
+
 			key = await manager.GetAuthenticatorKeyAsync(user);
 
 			return MfaResponse(user, key!);
@@ -51,9 +51,10 @@ public record SetupMfa : IRequest<IActionResult>
 				return new UnauthorizedResult();
 			}
 
-			var issuer = Uri.EscapeDataString(config.CurrentValue.Issuer);
+			var configValue = config.CurrentValue;
+			var issuer = Uri.EscapeDataString(configValue.Issuer);
 			var uri =
-				$"otpauth://totp/{issuer}:{Uri.EscapeDataString(user.Email)}?secret={key}&issuer={issuer}&digits=6";
+				$"otpauth://totp/{issuer}:{Uri.EscapeDataString(user.Email)}?secret={key}&issuer={issuer}&digits={configValue.Digits}";
 			return new ObjectResult(new MfaSetupDto
 			{
 				Key = key,

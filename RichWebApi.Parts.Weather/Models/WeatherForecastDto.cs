@@ -1,9 +1,12 @@
-﻿using FluentValidation;
+﻿using AutoMapper;
+using FluentValidation;
 using JetBrains.Annotations;
+using RichWebApi.Entities;
+using RichWebApi.Mappers;
 
 namespace RichWebApi.Models;
 
-public class WeatherForecastDto : IAuditableDto
+public class WeatherForecastDto : IDateAuditableDto, IHasMapping
 {
 	public DateOnly Date { get; set; }
 
@@ -28,4 +31,10 @@ public class WeatherForecastDto : IAuditableDto
 			RuleFor(x => x.Summary).NotNull().NotEmpty().MaximumLength(500);
 		}
 	}
+
+	public static void AddProfileMapping(Profile profile)
+		=> profile.CreateMap<WeatherForecast, WeatherForecastDto>(MemberList.Destination)
+			.ForMember(x => x.TemperatureF, x => x.Ignore())
+			.ReverseMap()
+			.IgnoreAuditableProperties();
 }
