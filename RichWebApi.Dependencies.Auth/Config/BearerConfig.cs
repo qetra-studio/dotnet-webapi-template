@@ -7,7 +7,7 @@ public class BearerConfig : IAppConfig
 	public string Issuer { get; set; } = null!;
 
 	public string Audience { get; set; } = null!;
-	
+
 	public sealed class Validator : AbstractValidator<BearerConfig>
 	{
 		public Validator()

@@ -1,18 +1,14 @@
-﻿using System.Text.Json;
-using FluentValidation;
+﻿using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.HttpSys;
 using RichWebApi.Entities.Identity;
 using RichWebApi.Models;
 using RichWebApi.Services;
 using RichWebApi.Services.Jwt;
 
-namespace RichWebApi.Handlers;
+namespace RichWebApi.Handlers.Auth;
 
 public record LoginWithMfa(VerifyMfaDto Mfa) : IRequest<IActionResult>
 {
@@ -60,7 +56,7 @@ public record LoginWithMfa(VerifyMfaDto Mfa) : IRequest<IActionResult>
 			{
 				AccessToken = jwt.Token,
 				TokenType = jwt.Type,
-				ExpiresIn = jwt.ExpiresIn.Seconds
+				ExpiresIn = (int)jwt.ExpiresIn.TotalSeconds
 			});
 		}
 	}

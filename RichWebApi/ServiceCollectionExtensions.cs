@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Internal;
+using RichWebApi.Authorization;
 using RichWebApi.Config;
 using RichWebApi.Maintenance;
 using RichWebApi.MediatR;
@@ -49,6 +50,11 @@ public static class ServiceCollectionExtensions
 																	   Assembly[] assemblies)
 	{
 		var appConfig = typeof(IAppConfig);
+		var builder = services.AddAuthorizationBuilder();
+		foreach (var assembly in assemblies)
+		{
+			builder.ConfigureForAssembly(assembly);
+		}
 		return services.AddValidatorsFromAssemblies(assemblies, includeInternalTypes: true,
 				filter: result =>
 				{

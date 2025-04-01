@@ -1,9 +1,9 @@
 ﻿namespace RichWebApi.Enums;
 
-public enum RichWebApiJwtPurpose : byte
+public enum RichWebApiAuthPurpose : byte
 {
 	Unknown = 0,
-	Mfa,
+	Auth,
 	Access,
 	Refresh
 }

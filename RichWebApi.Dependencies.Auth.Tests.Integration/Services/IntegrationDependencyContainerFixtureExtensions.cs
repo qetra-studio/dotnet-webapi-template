@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 using RichWebApi.Tests.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace RichWebApi.Tests.Services;
 

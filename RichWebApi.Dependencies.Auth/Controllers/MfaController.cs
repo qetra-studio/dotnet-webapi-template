@@ -2,12 +2,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RichWebApi.Handlers;
+using RichWebApi.Authorization;
+using RichWebApi.Enums;
+using RichWebApi.Handlers.Mfa;
 using RichWebApi.Models;
 
 namespace RichWebApi.Controllers;
 
 [Route("auth/mfa")]
+[ApiController]
 [Authorize]
 public class MfaController(IMediator mediator) : ControllerBase
 {
@@ -20,6 +23,7 @@ public class MfaController(IMediator mediator) : ControllerBase
 	[HttpPost("verify")]
 	[ProducesResponseType(StatusCodes.Status200OK)]
 	[ProducesResponseType<AuthErrorResponseDto>(StatusCodes.Status401Unauthorized)]
+	[AuthAction(RichWebApiAuthActions.SetupMfa)]
 	public Task<IActionResult> VerifyMfa([FromBody] VerifyMfaDto dto, CancellationToken cancellationToken)
 		=> mediator.Send(new VerifyMfaSetup(dto), cancellationToken);
 }

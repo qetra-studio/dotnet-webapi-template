@@ -17,6 +17,7 @@ public static class MfaOperations
 		result.ShouldHaveStatusCode(HttpStatusCode.OK);
 		var setup = result.Result;
 		var totp = new Totp(Base32Encoding.ToBytes(setup.Key));
+		mfaClient.SetAccessToken(setup);
 		var action = () => mfaClient.VerifyAsync(new VerifyMfaDto
 		{
 			Token = totp.ComputeTotp()
@@ -24,7 +25,7 @@ public static class MfaOperations
 
 		var assert = await action.Should().NotThrowAsync();
 		var response = assert.Subject;
-		
+
 		response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
 		return totp;

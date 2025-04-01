@@ -8,7 +8,7 @@ using RichWebApi.Entities.Identity;
 using RichWebApi.Models;
 using RichWebApi.Services;
 
-namespace RichWebApi.Handlers;
+namespace RichWebApi.Handlers.Mfa;
 
 public record VerifyMfaSetup(VerifyMfaDto Setup) : IRequest<IActionResult>
 {
@@ -52,7 +52,7 @@ public record VerifyMfaSetup(VerifyMfaDto Setup) : IRequest<IActionResult>
 			user.TwoFactorEnabled = true;
 			user.TwoFactorEnabledAt = clock.UtcNow;
 
-			await manager.UpdateAsync(user);
+			await manager.UpdateSecurityStampAsync(user);
 
 			return new OkResult();
 		}

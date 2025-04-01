@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using RichWebApi.Authorization;
 using RichWebApi.Config;
 using RichWebApi.Entities.Identity;
 using RichWebApi.Enums;
@@ -32,16 +34,16 @@ internal class AuthDependency : IAppDependency
 		var bearerConfig = sp.GetRequiredService<IOptionsMonitor<BearerConfig>>();
 		var signingKeys = UpdateSigningKeys(authConfig.CurrentValue);
 		authConfig.OnChange(x => signingKeys = UpdateSigningKeys(x));
-		
-		services.AddIdentity<RichWebApiUser, RichWebApiRole>(options =>
-			{
-				options.User.RequireUniqueEmail = true;
-			})
+
+		services.AddIdentity<RichWebApiUser, RichWebApiRole>(options => { options.User.RequireUniqueEmail = true; })
 			.AddEntityFrameworkStores<RichWebApiDbContext>()
 			.AddDefaultTokenProviders();
 		services.AddSingleton<IJwtTokenIssuer, JwtTokenIssuer>();
 		services.TryAddScoped<IRichWebApiUserContextAccessor, RichWebApiUserContextAccessor>();
-		services.TryAddScoped<IIdentityProvider>(sp => new AuthIdentityProvider(new Lazy<IRichWebApiUserContextAccessor>(sp.GetRequiredService<IRichWebApiUserContextAccessor>)));
+		services.TryAddScoped<IIdentityProvider>(serviceProvider
+			=> new AuthIdentityProvider(
+				new Lazy<IRichWebApiUserContextAccessor>(serviceProvider
+					.GetRequiredService<IRichWebApiUserContextAccessor>)));
 
 		services.ConfigureApplicationCookie(options =>
 		{
@@ -78,9 +80,12 @@ internal class AuthDependency : IAppDependency
 				};
 			});
 
-		services.AddAuthorizationBuilder()
-			.AddPolicy("mfa-login", x => x.RequireAuthenticatedUser().RequirePurpose(RichWebApiJwtPurpose.Mfa))
-			.AddDefaultPolicy("access", x => x.RequireAuthenticatedUser().RequirePurpose(RichWebApiJwtPurpose.Access));
+		services.AddScoped<IAuthorizationHandler, SecurityStampRequirement.Handler>();
+		var builder = services.AddAuthorizationBuilder();
+
+		builder.AddDefaultPolicy("default", x => x
+			.RequireAuthenticatedUser()
+			.RequireSecurityStamp());
 
 		return;
 

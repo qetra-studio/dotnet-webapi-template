@@ -7,7 +7,7 @@ using RichWebApi.Entities.Identity;
 using RichWebApi.Extensions;
 using RichWebApi.Models;
 
-namespace RichWebApi.Handlers;
+namespace RichWebApi.Handlers.Auth;
 
 public record RegisterUser(RegisterDto Credentials) : IRequest<IActionResult>
 {

@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Headers;
-using Newtonsoft.Json;
 
 namespace RichWebApi.Tests.Client;
 

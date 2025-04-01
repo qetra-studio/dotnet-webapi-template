@@ -22,4 +22,12 @@ public static class JwtSecurityTokenAssertionExtensions
 		userId.Should().NotBeEmpty();
 		return userId;
 	}
+
+	public static string ShouldHaveStamp(this JwtSecurityToken token)
+	{
+		var stampClaim = token.Claims.FirstOrDefault(x => x.Type == "stamp");
+		stampClaim.Should().NotBeNull();
+		stampClaim.Value.Should().NotBeNull().And.NotBeEmpty();
+		return stampClaim.Value;
+	}
 }

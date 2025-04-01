@@ -21,15 +21,15 @@ public static class RegisterOperations
 		public LoginValueKind? LoginValueKind { get; set; }
 
 		public Func<JwtSecurityToken, CancellationToken, Task>? VerifyJwtTokenAsync { get; set; }
-		
+
 		public bool SkipMfa { get; set; }
 	}
 
-	public static async Task<(AuthSuccessDto,LoginDto)> RegisterAndLoginUserAsync(this IServiceProvider serviceProvider,
-	                                                                     Func<IFakerFactory, ValueTask<RegisterDto>>
-		                                                                     creds,
-	                                                                     Action<RegisterAndLoginRandomUserOptions>?
-		                                                                     configureOptions = null)
+	public static async Task<(AuthSuccessDto, LoginDto)> RegisterAndLoginUserAsync(this IServiceProvider serviceProvider,
+																		 Func<IFakerFactory, ValueTask<RegisterDto>>
+																			 creds,
+																		 Action<RegisterAndLoginRandomUserOptions>?
+																			 configureOptions = null)
 	{
 		var operationOptions = new RegisterAndLoginRandomUserOptions();
 		configureOptions?.Invoke(operationOptions);
@@ -70,6 +70,7 @@ public static class RegisterOperations
 		{
 			t.ShouldHavePurposeClaim("access");
 			t.ShouldHaveUserId();
+			t.ShouldHaveStamp();
 			if (operationOptions.VerifyJwtTokenAsync is not null)
 			{
 				await operationOptions.VerifyJwtTokenAsync(t, ct);
@@ -86,7 +87,7 @@ public static class RegisterOperations
 	}
 
 	public static async Task<(AuthSuccessDto, LoginDto)> LoginWithMfaAsync(this IServiceProvider serviceProvider,
-	                                                                       LoginDto login, Totp totp)
+																		   LoginDto login, Totp totp)
 	{
 		var client = serviceProvider.GetRequiredService<IAuthClient>();
 		var credsLogin = () => client.LoginWithCredentialsAsync(login);

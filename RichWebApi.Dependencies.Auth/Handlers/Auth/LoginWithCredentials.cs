@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +8,9 @@ using RichWebApi.Entities.Identity;
 using RichWebApi.Enums;
 using RichWebApi.Extensions;
 using RichWebApi.Models;
-using RichWebApi.Services;
 using RichWebApi.Services.Jwt;
 
-namespace RichWebApi.Handlers;
+namespace RichWebApi.Handlers.Auth;
 
 public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResult>
 {
@@ -23,7 +21,7 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 	}
 
 	[UsedImplicitly]
-	internal class LoginHandler(
+	internal class LoginWithCredentialsHandler(
 		SignInManager<RichWebApiUser> signInManager,
 		IJwtTokenIssuer jwtTokenIssuer,
 		UserManager<RichWebApiUser> userManager)
@@ -58,14 +56,14 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 
 			if (await userManager.GetTwoFactorEnabledAsync(user))
 			{
-				var jwt = await jwtTokenIssuer.IssueTwoFactorTokenAsync(user, cancellationToken);
+				var jwt = await jwtTokenIssuer.IssueAuthActionTokenAsync(user, RichWebApiAuthActions.Login, cancellationToken);
 				return new ObjectResult(new AuthActionRequiredDto
 				{
 					ErrorCode = "two_factor_required",
 					Message = "Complete 2FA in order to continue.",
 					AccessToken = jwt.Token,
 					TokenType = jwt.Type,
-					ExpiresIn = jwt.ExpiresIn.Seconds
+					ExpiresIn = (int)jwt.ExpiresIn.TotalSeconds
 				})
 				{
 					StatusCode = StatusCodes.Status302Found
@@ -79,7 +77,7 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 				{
 					AccessToken = jwt.Token,
 					TokenType = jwt.Type,
-					ExpiresIn = jwt.ExpiresIn.Seconds
+					ExpiresIn = (int)jwt.ExpiresIn.TotalSeconds
 				});
 			}
 

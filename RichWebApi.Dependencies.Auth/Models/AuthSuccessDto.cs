@@ -1,6 +1,6 @@
 ﻿namespace RichWebApi.Models;
 
-public sealed class AuthSuccessDto : IOutbound
+public sealed class AuthSuccessDto : IOutbound, IHasJwt
 {
 	public required string AccessToken { get; init; } = null!;
 

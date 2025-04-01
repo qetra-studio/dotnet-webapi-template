@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using OtpNet;
@@ -40,10 +39,10 @@ public sealed class MfaTests : IntegrationTest
 		{
 			Token = totp.ComputeTotp()
 		});
-
+		client.SetAccessToken(setup);
 		var assert = await action.Should().NotThrowAsync();
 		var response = assert.Subject;
-		
+
 		response.ShouldHaveStatusCode(HttpStatusCode.OK);
 	}
 
@@ -58,6 +57,7 @@ public sealed class MfaTests : IntegrationTest
 		result.ShouldHaveStatusCode(HttpStatusCode.OK);
 		var setup = result.Result;
 		var totp = new Totp(Base32Encoding.ToBytes(setup.Key));
+		mfaClient.SetAccessToken(setup);
 		await mfaClient.VerifyAsync(new VerifyMfaDto
 		{
 			Token = totp.ComputeTotp()
@@ -71,7 +71,31 @@ public sealed class MfaTests : IntegrationTest
 		response.ShouldHaveStatusCode(HttpStatusCode.Found);
 		response.Result.ErrorCode.Should().Be("two_factor_required");
 	}
-	
+
+	[Fact]
+	public async Task CredsTokenInvalidAfterMfaEnabled()
+	{
+		var (auth, _) = await _serviceProvider.RegisterAndLoginUserAsync(factory
+			=> new ValueTask<RegisterDto>(factory.RegisterDto().Generate("random")), o => o.SkipMfa = true);
+		var mfaClient = _serviceProvider.GetRequiredService<IMfaClient>();
+		mfaClient.SetAccessToken(auth);
+		var result = await mfaClient.SetupAsync();
+		result.ShouldHaveStatusCode(HttpStatusCode.OK);
+		var setup = result.Result;
+		var totp = new Totp(Base32Encoding.ToBytes(setup.Key));
+		mfaClient.SetAccessToken(setup);
+		await mfaClient.VerifyAsync(new VerifyMfaDto
+		{
+			Token = totp.ComputeTotp()
+		});
+
+		var profileClient = _serviceProvider.GetRequiredService<IProfileClient>();
+		profileClient.SetAccessToken(auth);
+		var action = () => profileClient.GetCurrentUserProfileAsync();
+		var assert = await action.Should().ThrowAsync<ApiException>();
+		assert.Which.ShouldHaveStatusCode(HttpStatusCode.Forbidden);
+	}
+
 	[Fact]
 	public Task LoginsWithMfa() => _serviceProvider.RegisterAndLoginUserAsync(factory
 		=> new ValueTask<RegisterDto>(factory.RegisterDto().Generate("random")));
@@ -87,12 +111,13 @@ public sealed class MfaTests : IntegrationTest
 		result.ShouldHaveStatusCode(HttpStatusCode.OK);
 		var setup = result.Result;
 		var totp = new Totp(Base32Encoding.ToBytes(setup.Key));
+		mfaClient.SetAccessToken(setup);
 		await mfaClient.VerifyAsync(new VerifyMfaDto
 		{
 			Token = totp.ComputeTotp()
 		});
 		var authClient = _serviceProvider.GetRequiredService<IAuthClient>();
-		authClient.SetAccessToken(auth);
+		authClient.SetAccessToken(setup);
 		var action = () => authClient.LoginWithMfaAsync(new VerifyMfaDto
 		{
 			Token = totp.ComputeTotp()
@@ -101,7 +126,7 @@ public sealed class MfaTests : IntegrationTest
 		var response = assert.Which;
 		response.ShouldHaveStatusCode(HttpStatusCode.Forbidden);
 	}
-	
+
 
 	[Fact]
 	public async Task AnonymousSetupCause401()
