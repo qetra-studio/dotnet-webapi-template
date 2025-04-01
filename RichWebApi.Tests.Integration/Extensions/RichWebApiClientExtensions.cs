@@ -8,6 +8,9 @@ public static class RichWebApiClientExtensions
 	public static void SetAccessToken<T>(this T client, AuthSuccessDto auth) where T : IRichWebApiClient
 		=> client.AuthorizationHeader = new AuthenticationHeaderValue(auth.TokenType, auth.AccessToken);
 
-	public static void SetRefreshToken<T>(this IRichWebApiClient client, AuthSuccessDto auth) where T : IRichWebApiClient
+	public static void SetAccessToken<T>(this T client, AuthActionRequiredDto auth) where T : IRichWebApiClient
+		=> client.AuthorizationHeader = new AuthenticationHeaderValue(auth.TokenType, auth.AccessToken);
+
+	public static void SetRefreshToken<T>(this T client, AuthSuccessDto auth) where T : IRichWebApiClient
 		=> throw new NotImplementedException();
 }

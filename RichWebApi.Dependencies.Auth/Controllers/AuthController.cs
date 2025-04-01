@@ -28,7 +28,7 @@ public class AuthController(IMediator mediator) : ControllerBase
 	[HttpPost("login/mfa", Name = nameof(LoginWithMfa))]
 	[ProducesResponseType<AuthSuccessDto>(StatusCodes.Status200OK)]
 	[ProducesResponseType<AuthErrorResponseDto>(StatusCodes.Status401Unauthorized)]
-	[Authorize]
+	[Authorize(Policy = "mfa-login")]
 	public Task<IActionResult> LoginWithMfa([FromBody] VerifyMfaDto request, CancellationToken token)
 		=> mediator.Send(new LoginWithMfa(request), token);
 }

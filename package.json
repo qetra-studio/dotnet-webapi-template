@@ -16,7 +16,7 @@
 	"private": true,
 	"scripts": {
 		"preinstall": "dotnet tool restore && dotnet restore -f",
-		"postinstall": "husky install",
+		"postinstall": "husky",
 		"hooks:pre-commit": "lint-staged -r",
 		"format-all": "npm run format:cs && npm run format:other",
 		"format:cs": "dotnet format whitespace RichWebApi.sln",

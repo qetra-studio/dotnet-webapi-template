@@ -6,3 +6,4 @@ node_modules
 .vs
 vs2022/*.zip
 *.sln.DotSettings
+**/.DS_Store

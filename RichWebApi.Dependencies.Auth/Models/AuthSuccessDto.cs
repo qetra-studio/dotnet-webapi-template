@@ -2,7 +2,8 @@
 
 public sealed class AuthSuccessDto : IOutbound
 {
-	public required string AccessToken { get; set; } = null!;
+	public required string AccessToken { get; init; } = null!;
 
-	public required string TokenType { get; set; } = null!;
+	public required string TokenType { get; init; } = null!;
+	public required int ExpiresIn { get; init; }
 }

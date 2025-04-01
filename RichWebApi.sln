@@ -36,27 +36,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{7C0470FC-1
 		.config\dotnet-tools.json = .config\dotnet-tools.json
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nix", "nix", "{D6C11702-27B4-4F33-A24F-7DB36F8F8C8A}"
-	ProjectSection(SolutionItems) = preProject
-		scripts\nix\add-migration.sh = scripts\nix\add-migration.sh
-		scripts\nix\list-migrations.sh = scripts\nix\list-migrations.sh
-		scripts\nix\recreate-initial.sh = scripts\nix\recreate-initial.sh
-		scripts\nix\remove-last-migration.sh = scripts\nix\remove-last-migration.sh
-		scripts\nix\update-db.sh = scripts\nix\update-db.sh
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{C48A2076-5D0C-4252-9E4D-77D20791F147}"
 	ProjectSection(SolutionItems) = preProject
 		scripts\rename-solution.js = scripts\rename-solution.js
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "win", "win", "{BEB5FEE9-12A5-453C-BA7F-168D7990B0E5}"
-	ProjectSection(SolutionItems) = preProject
-		scripts\win\add-migration.bat = scripts\win\add-migration.bat
-		scripts\win\list-migrations.bat = scripts\win\list-migrations.bat
-		scripts\win\recreate-initial.bat = scripts\win\recreate-initial.bat
-		scripts\win\remove-last-migration.bat = scripts\win\remove-last-migration.bat
-		scripts\win\update-db.bat = scripts\win\update-db.bat
+		scripts\add-migration.ps1 = scripts\add-migration.ps1
+		scripts\get-paths.ps1 = scripts\get-paths.ps1
+		scripts\list-migrations.ps1 = scripts\list-migrations.ps1
+		scripts\migrations-script.ps1 = scripts\migrations-script.ps1
+		scripts\optimize.ps1 = scripts\optimize.ps1
+		scripts\remove-last-migration.ps1 = scripts\remove-last-migration.ps1
+		scripts\squash-migrations.ps1 = scripts\squash-migrations.ps1
+		scripts\update-db.ps1 = scripts\update-db.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{40F2321C-99B8-4068-ABED-739FBEE79E21}"
@@ -193,8 +183,6 @@ Global
 		{30C0B70C-6CA9-4662-BA51-6874C4B5EB09} = {40A0E382-FEF5-4F37-A4C4-72BCA1C9DCCD}
 		{C2EB3CF2-14E4-4FF3-BAEB-ED2C194BE0C8} = {40A0E382-FEF5-4F37-A4C4-72BCA1C9DCCD}
 		{C48A2076-5D0C-4252-9E4D-77D20791F147} = {7C0470FC-178E-42F2-983B-7672E0F0B57E}
-		{D6C11702-27B4-4F33-A24F-7DB36F8F8C8A} = {C48A2076-5D0C-4252-9E4D-77D20791F147}
-		{BEB5FEE9-12A5-453C-BA7F-168D7990B0E5} = {C48A2076-5D0C-4252-9E4D-77D20791F147}
 		{40F2321C-99B8-4068-ABED-739FBEE79E21} = {7C0470FC-178E-42F2-983B-7672E0F0B57E}
 		{C83E41B2-5B74-481F-80C8-5F9772ED5F11} = {7C0470FC-178E-42F2-983B-7672E0F0B57E}
 		{B7BD8A50-96CF-47D8-A8DE-6824704EF501} = {C83E41B2-5B74-481F-80C8-5F9772ED5F11}

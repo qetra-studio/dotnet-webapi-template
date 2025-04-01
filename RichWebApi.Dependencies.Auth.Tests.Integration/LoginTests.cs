@@ -78,5 +78,9 @@ public class LoginTests : IntegrationTest
 	public Task LoginsWithRandomUser(LoginValueKind loginValueKind)
 		=> _serviceProvider.RegisterAndLoginUserAsync(
 			factory => new ValueTask<RegisterDto>(factory.RegisterDto().Generate("random")),
-			options => options.LoginValueKind = loginValueKind);
+			options =>
+			{
+				options.SkipMfa = true;
+				options.LoginValueKind = loginValueKind;
+			});
 }

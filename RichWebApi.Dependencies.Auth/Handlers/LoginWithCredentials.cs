@@ -10,6 +10,7 @@ using RichWebApi.Enums;
 using RichWebApi.Extensions;
 using RichWebApi.Models;
 using RichWebApi.Services;
+using RichWebApi.Services.Jwt;
 
 namespace RichWebApi.Handlers;
 
@@ -57,12 +58,14 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 
 			if (await userManager.GetTwoFactorEnabledAsync(user))
 			{
-				var token = await jwtTokenIssuer.IssueTwoFactorTokenAsync(user, cancellationToken);
+				var jwt = await jwtTokenIssuer.IssueTwoFactorTokenAsync(user, cancellationToken);
 				return new ObjectResult(new AuthActionRequiredDto
 				{
 					ErrorCode = "two_factor_required",
 					Message = "Complete 2FA in order to continue.",
-					AccessToken = token
+					AccessToken = jwt.Token,
+					TokenType = jwt.Type,
+					ExpiresIn = jwt.ExpiresIn.Seconds
 				})
 				{
 					StatusCode = StatusCodes.Status302Found
@@ -71,11 +74,12 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 
 			if (result.Succeeded)
 			{
-				var token = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
+				var jwt = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
 				return new ObjectResult(new AuthSuccessDto
 				{
-					AccessToken = token,
-					TokenType = JwtBearerDefaults.AuthenticationScheme
+					AccessToken = jwt.Token,
+					TokenType = jwt.Type,
+					ExpiresIn = jwt.ExpiresIn.Seconds
 				});
 			}
 

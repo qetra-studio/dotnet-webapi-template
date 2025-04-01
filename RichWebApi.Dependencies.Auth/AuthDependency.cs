@@ -13,6 +13,7 @@ using RichWebApi.Entities.Identity;
 using RichWebApi.Enums;
 using RichWebApi.Extensions;
 using RichWebApi.Services;
+using RichWebApi.Services.Jwt;
 using RichWebApi.Validation;
 
 [assembly: InternalsVisibleTo("RichWebApi.Dependencies.Auth.Tests.Unit")]
@@ -23,24 +24,24 @@ internal class AuthDependency : IAppDependency
 {
 	public void ConfigureServices(IServiceCollection services, IAppPartsCollection parts)
 	{
+		services.AddOptionsWithValidator<AuthConfig, AuthConfig.Validator>("Dependencies:Auth");
+		services.AddOptionsWithValidator<BearerConfig, BearerConfig.Validator>("Dependencies:Auth:Bearer");
+		services.AddOptionsWithValidator<MfaConfig, MfaConfig.Validator>("Dependencies:Auth:Mfa");
+		var sp = services.BuildServiceProvider();
+		var authConfig = sp.GetRequiredService<IOptionsMonitor<AuthConfig>>();
+		var bearerConfig = sp.GetRequiredService<IOptionsMonitor<BearerConfig>>();
+		var signingKeys = UpdateSigningKeys(authConfig.CurrentValue);
+		authConfig.OnChange(x => signingKeys = UpdateSigningKeys(x));
+		
 		services.AddIdentity<RichWebApiUser, RichWebApiRole>(options =>
 			{
 				options.User.RequireUniqueEmail = true;
 			})
 			.AddEntityFrameworkStores<RichWebApiDbContext>()
 			.AddDefaultTokenProviders();
-		services.AddOptionsWithValidator<AuthConfig, AuthConfig.Validator>("Dependencies:Auth");
-		services.AddOptionsWithValidator<BearerConfig, BearerConfig.Validator>("Dependencies:Auth:Bearer");
-		services.AddOptionsWithValidator<MfaConfig, MfaConfig.Validator>("Dependencies:Auth:Mfa");
 		services.AddSingleton<IJwtTokenIssuer, JwtTokenIssuer>();
 		services.TryAddScoped<IRichWebApiUserContextAccessor, RichWebApiUserContextAccessor>();
 		services.TryAddScoped<IIdentityProvider>(sp => new AuthIdentityProvider(new Lazy<IRichWebApiUserContextAccessor>(sp.GetRequiredService<IRichWebApiUserContextAccessor>)));
-
-		var sp = services.BuildServiceProvider();
-		var authConfig = sp.GetRequiredService<IOptionsMonitor<AuthConfig>>();
-		var bearerConfig = sp.GetRequiredService<IOptionsMonitor<BearerConfig>>();
-		var signingKeys = UpdateSigningKeys(authConfig.CurrentValue);
-		authConfig.OnChange(x => signingKeys = UpdateSigningKeys(x));
 
 		services.ConfigureApplicationCookie(options =>
 		{
@@ -78,7 +79,8 @@ internal class AuthDependency : IAppDependency
 			});
 
 		services.AddAuthorizationBuilder()
-			.AddDefaultPolicy("access", x => x.RequirePurpose(RichWebApiJwtPurpose.Access));
+			.AddPolicy("mfa-login", x => x.RequireAuthenticatedUser().RequirePurpose(RichWebApiJwtPurpose.Mfa))
+			.AddDefaultPolicy("access", x => x.RequireAuthenticatedUser().RequirePurpose(RichWebApiJwtPurpose.Access));
 
 		return;
 

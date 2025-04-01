@@ -3,6 +3,7 @@ using System.Net;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using OtpNet;
 using RichWebApi.Tests.Client;
 using RichWebApi.Tests.Enums;
 using RichWebApi.Tests.Extensions;
@@ -20,13 +21,15 @@ public static class RegisterOperations
 		public LoginValueKind? LoginValueKind { get; set; }
 
 		public Func<JwtSecurityToken, CancellationToken, Task>? VerifyJwtTokenAsync { get; set; }
+		
+		public bool SkipMfa { get; set; }
 	}
 
-	public static async Task<AuthSuccessDto> RegisterAndLoginUserAsync(this IServiceProvider serviceProvider,
-																	   Func<IFakerFactory, ValueTask<RegisterDto>>
-																		   creds,
-																	   Action<RegisterAndLoginRandomUserOptions>?
-																		   configureOptions = null)
+	public static async Task<(AuthSuccessDto,LoginDto)> RegisterAndLoginUserAsync(this IServiceProvider serviceProvider,
+	                                                                     Func<IFakerFactory, ValueTask<RegisterDto>>
+		                                                                     creds,
+	                                                                     Action<RegisterAndLoginRandomUserOptions>?
+		                                                                     configureOptions = null)
 	{
 		var operationOptions = new RegisterAndLoginRandomUserOptions();
 		configureOptions?.Invoke(operationOptions);
@@ -73,6 +76,33 @@ public static class RegisterOperations
 			}
 		});
 
-		return response;
+		if (operationOptions.SkipMfa)
+		{
+			return (response, loginDto);
+		}
+
+		var totp = await serviceProvider.SetupMfaAsync(response);
+		return await serviceProvider.LoginWithMfaAsync(loginDto, totp);
+	}
+
+	public static async Task<(AuthSuccessDto, LoginDto)> LoginWithMfaAsync(this IServiceProvider serviceProvider,
+	                                                                       LoginDto login, Totp totp)
+	{
+		var client = serviceProvider.GetRequiredService<IAuthClient>();
+		var credsLogin = () => client.LoginWithCredentialsAsync(login);
+		var assertCredsLogin = await credsLogin.Should().ThrowAsync<ApiException<AuthActionRequiredDto>>();
+		var credsLoginResponse = assertCredsLogin.Which;
+		credsLoginResponse.ShouldHaveStatusCode(HttpStatusCode.Found);
+		credsLoginResponse.Result.ErrorCode.Should().Be("two_factor_required");
+		client.SetAccessToken(credsLoginResponse.Result);
+		var action = () => client.LoginWithMfaAsync(new VerifyMfaDto
+		{
+			Token = totp.ComputeTotp()
+		});
+		var assert = await action.Should().NotThrowAsync();
+		var response = assert.Subject;
+		response.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+		return (response.Result, login);
 	}
 }

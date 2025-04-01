@@ -19,9 +19,10 @@ public record VerifyMfaSetup(VerifyMfaDto Setup) : IRequest<IActionResult>
 	}
 
 	[UsedImplicitly]
-	internal class VerifyMfaSetupHandler(IRichWebApiUserContextAccessor accessor,
-	                                     ISystemClock clock,
-	                                     UserManager<RichWebApiUser> manager) : IRequestHandler<VerifyMfaSetup, IActionResult>
+	internal class VerifyMfaSetupHandler(
+		IRichWebApiUserContextAccessor accessor,
+		ISystemClock clock,
+		UserManager<RichWebApiUser> manager) : IRequestHandler<VerifyMfaSetup, IActionResult>
 	{
 		public async Task<IActionResult> Handle(VerifyMfaSetup request, CancellationToken cancellationToken)
 		{
@@ -35,18 +36,24 @@ public record VerifyMfaSetup(VerifyMfaDto Setup) : IRequest<IActionResult>
 				request.Setup.Token);
 			if (!isValid)
 			{
-				return new BadRequestObjectResult(new AuthErrorDto
+				return new UnauthorizedObjectResult(new AuthErrorResponseDto
 				{
-					ErrorCode = "invalid_token",
-					Message = "Provided token is invalid."
+					Errors =
+					[
+						new AuthErrorDto
+						{
+							ErrorCode = "invalid_token",
+							Message = "Provided token is invalid."
+						}
+					]
 				});
 			}
 
 			user.TwoFactorEnabled = true;
 			user.TwoFactorEnabledAt = clock.UtcNow;
-			
+
 			await manager.UpdateAsync(user);
-			
+
 			return new OkResult();
 		}
 	}

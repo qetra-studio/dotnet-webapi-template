@@ -32,7 +32,7 @@
 		},
 		"watch": {
 			"commandName": "Executable",
-			"executablePath": "dotnet.exe",
+			"executablePath": "dotnet",
 			"workingDirectory": "$(ProjectDir)",
 			"commandLineArgs": "watch --non-interactive run",
 			"launchBrowser": false,
@@ -45,7 +45,7 @@
 		},
 		"watch, skip startup": {
 			"commandName": "Executable",
-			"executablePath": "dotnet.exe",
+			"executablePath": "dotnet",
 			"workingDirectory": "$(ProjectDir)",
 			"commandLineArgs": "watch --non-interactive run",
 			"environmentVariables": {

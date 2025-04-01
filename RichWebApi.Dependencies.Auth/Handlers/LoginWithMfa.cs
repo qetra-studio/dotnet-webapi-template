@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Server.HttpSys;
 using RichWebApi.Entities.Identity;
 using RichWebApi.Models;
 using RichWebApi.Services;
+using RichWebApi.Services.Jwt;
 
 namespace RichWebApi.Handlers;
 
@@ -41,7 +42,7 @@ public record LoginWithMfa(VerifyMfaDto Mfa) : IRequest<IActionResult>
 
 			if (!isValid)
 			{
-				return new UnauthorizedObjectResult(new AuthErrorResponseDto()
+				return new UnauthorizedObjectResult(new AuthErrorResponseDto
 				{
 					Errors =
 					[
@@ -54,11 +55,12 @@ public record LoginWithMfa(VerifyMfaDto Mfa) : IRequest<IActionResult>
 				});
 			}
 
-			var token = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
+			var jwt = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
 			return new ObjectResult(new AuthSuccessDto
 			{
-				AccessToken = token,
-				TokenType = JwtBearerDefaults.AuthenticationScheme
+				AccessToken = jwt.Token,
+				TokenType = jwt.Type,
+				ExpiresIn = jwt.ExpiresIn.Seconds
 			});
 		}
 	}
