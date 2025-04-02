@@ -19,8 +19,10 @@ using RichWebApi.Parts;
 using RichWebApi.Services;
 using RichWebApi.Services.Jwt;
 using RichWebApi.Validation;
+using Riok.Mapperly.Abstractions;
 
 [assembly: InternalsVisibleTo("RichWebApi.Dependencies.Auth.Tests.Unit")]
+[assembly: MapperDefaults(ThrowOnMappingNullMismatch = true, ThrowOnPropertyMappingNullMismatch = true)]
 
 namespace RichWebApi;
 

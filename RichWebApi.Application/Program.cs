@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Autofac.Extensions.DependencyInjection;
-using AutoMapper.EquivalencyExpression;
 using Destructurama;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -17,10 +16,12 @@ using RichWebApi.Parts;
 using RichWebApi.Startup;
 using RichWebApi.Swagger;
 using RichWebApi.Validation;
+using Riok.Mapperly.Abstractions;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 
+[assembly: MapperDefaults(ThrowOnMappingNullMismatch = true, ThrowOnPropertyMappingNullMismatch = true)]
 namespace RichWebApi;
 
 public class Program
@@ -190,9 +191,6 @@ public class Program
 		services.AddFluentValidationRulesToSwagger(opt => opt.SetFluentValidationCompatibility());
 		services.AddHealthChecks();
 
-		services.AddAutoMapper(x => x.AddCollectionMappers(), typeof(Program).Assembly);
-
-		services.AddStartupAction<AutoMapperValidationAction>();
 		return services;
 	}
 

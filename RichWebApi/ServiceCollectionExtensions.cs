@@ -12,9 +12,10 @@ using RichWebApi.Mappers;
 using RichWebApi.MediatR;
 using RichWebApi.Services;
 using RichWebApi.Startup;
+using Riok.Mapperly.Abstractions;
 
 [assembly: InternalsVisibleTo("RichWebApi.Tests.Unit")]
-
+[assembly: MapperDefaults(ThrowOnMappingNullMismatch = true, ThrowOnPropertyMappingNullMismatch = true)]
 namespace RichWebApi;
 
 public static class ServiceCollectionExtensions

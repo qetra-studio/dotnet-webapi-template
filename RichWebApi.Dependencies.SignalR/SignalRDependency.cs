@@ -7,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RichWebApi.Dependencies;
 using RichWebApi.Parts;
+using Riok.Mapperly.Abstractions;
+
+[assembly: MapperDefaults(ThrowOnMappingNullMismatch = true, ThrowOnPropertyMappingNullMismatch = true)]
 
 namespace RichWebApi;
 

@@ -6,8 +6,10 @@ using RichWebApi.Parts;
 using RichWebApi.Services;
 using RichWebApi.Startup;
 using RichWebApi.Validation;
+using Riok.Mapperly.Abstractions;
 
 [assembly: InternalsVisibleTo("RichWebApi.Parts.Weather.Tests.Unit")]
+[assembly: MapperDefaults(ThrowOnMappingNullMismatch = true, ThrowOnPropertyMappingNullMismatch = true)]
 namespace RichWebApi;
 
 internal class WeatherPart : IAppPart

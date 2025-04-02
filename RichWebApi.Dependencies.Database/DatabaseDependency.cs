@@ -17,8 +17,10 @@ using RichWebApi.Startup;
 using RichWebApi.Utilities;
 using RichWebApi.Utilities.Paging;
 using RichWebApi.Validation;
+using Riok.Mapperly.Abstractions;
 
 [assembly: InternalsVisibleTo("RichWebApi.Dependencies.Database.Tests.Unit")]
+[assembly: MapperDefaults(ThrowOnMappingNullMismatch = true, ThrowOnPropertyMappingNullMismatch = true)]
 
 namespace RichWebApi;
 

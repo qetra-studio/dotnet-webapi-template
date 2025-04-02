@@ -15,7 +15,7 @@ public partial class UserProfileDto : IOutbound, IDateAuditableDto, IHasAdapter<
 	public bool PhoneNumberConfirmed { get; set; }
 
 
-	public string? Email { get; set; } = null!;
+	public string? Email { get; set; }
 	public bool EmailConfirmed { get; set; }
 	public DateTimeOffset? EmailConfirmedAt { get; set; }
 
