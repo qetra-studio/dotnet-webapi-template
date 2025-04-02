@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using RichWebApi.Config;
+using RichWebApi.Parts;
 using RichWebApi.Persistence.Interceptors;
 using RichWebApi.Tests.DependencyInjection;
 using RichWebApi.Tests.Entities;

@@ -7,6 +7,7 @@ using RichWebApi.Entities;
 using RichWebApi.Entities.Configuration;
 using RichWebApi.Exceptions;
 using RichWebApi.Extensions;
+using RichWebApi.Parts;
 using static System.Linq.Expressions.Expression;
 
 namespace RichWebApi.Persistence.Internal;
@@ -16,14 +17,15 @@ internal class EntityValidatorsProvider : IEntityValidatorsProvider
 	private readonly ILogger<EntityValidatorsProvider> _logger;
 
 	public IReadOnlyDictionary<Type, (Func<IServiceProvider, object[]> ValidatorsProvider, AsyncValidationExecutor
-		ValidationExecutor)> AsyncValidators { get; }
+		ValidationExecutor)> AsyncValidators
+	{ get; }
 
 	public bool AllEntitiesHaveValidators { get; }
 
 	public EntityValidatorsProvider(ILogger<EntityValidatorsProvider> logger,
-	                                IServiceProvider serviceProvider,
-	                                IOptionsMonitor<DatabaseEntitiesConfig> configMonitor,
-	                                IEnumerable<IAppPart> partsToScan)
+									IServiceProvider serviceProvider,
+									IOptionsMonitor<DatabaseEntitiesConfig> configMonitor,
+									IEnumerable<IAppPart> partsToScan)
 	{
 		_logger = logger;
 		var typeMarkersToScan = partsToScan
@@ -34,7 +36,7 @@ internal class EntityValidatorsProvider : IEntityValidatorsProvider
 		var entityTypes = typeMarkersToScan
 			.SelectMany(x => x.Assembly.ExportedTypes
 				.Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false }
-				            && t.IsAssignableTo(entityType)))
+							&& t.IsAssignableTo(entityType)))
 			.ToArray();
 		var validators = logger.Time(() =>
 		{
@@ -67,9 +69,9 @@ internal class EntityValidatorsProvider : IEntityValidatorsProvider
 		var validators = validatorProvider(serviceProvider);
 		foreach (var v in validators)
 		{
-			yield return (entity, token) => validate(v, entity, token);	
+			yield return (entity, token) => validate(v, entity, token);
 		}
-		
+
 	}
 
 	private (Func<IServiceProvider, object[]>, AsyncValidationExecutor)? CreateEntityValidators(

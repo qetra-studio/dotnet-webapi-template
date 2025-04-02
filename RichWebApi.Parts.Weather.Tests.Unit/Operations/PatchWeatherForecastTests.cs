@@ -6,6 +6,7 @@ using RichWebApi.Entities;
 using RichWebApi.Hubs;
 using RichWebApi.Models;
 using RichWebApi.Operations;
+using RichWebApi.Parts;
 using RichWebApi.Persistence;
 using RichWebApi.Tests.DependencyInjection;
 using RichWebApi.Tests.FluentAssertions;

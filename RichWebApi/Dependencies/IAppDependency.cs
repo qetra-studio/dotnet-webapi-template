@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using RichWebApi.Parts;
 
-namespace RichWebApi;
+namespace RichWebApi.Dependencies;
 
 public interface IAppDependency
 {

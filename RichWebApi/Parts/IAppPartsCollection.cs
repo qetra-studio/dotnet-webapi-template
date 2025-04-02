@@ -1,4 +1,4 @@
-﻿namespace RichWebApi;
+﻿namespace RichWebApi.Parts;
 
 /// <summary>
 /// Specifies the contract for a collection of application parts.

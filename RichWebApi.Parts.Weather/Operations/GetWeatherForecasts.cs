@@ -1,11 +1,10 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using FluentValidation;
+﻿using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using RichWebApi.Entities;
 using RichWebApi.Extensions;
+using RichWebApi.Mappers;
 using RichWebApi.Models;
 using RichWebApi.Persistence;
 using RichWebApi.Utilities.Paging;
@@ -45,7 +44,7 @@ public record GetWeatherForecasts(int Page, int Size, DateTime? From = null, Dat
 				.MaybeWhere(to is not null, x => x.Date <= to)
 				.OrderBy(x => x.Date)
 				.AsNoTracking()
-				.ProjectTo<WeatherForecastDto>(mapper.ConfigurationProvider)
+				.ProjectTo<WeatherForecastDto>(mapper)
 				.ToPagedResultAsync(request, ct), cancellationToken);
 		}
 	}

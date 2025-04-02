@@ -6,6 +6,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using RichWebApi.Config;
+using RichWebApi.Dependencies;
+using RichWebApi.Parts;
 using RichWebApi.Persistence.Interceptors;
 using RichWebApi.Services;
 using RichWebApi.Tests.NSubstitute;

@@ -1,11 +1,11 @@
-﻿using AutoMapper;
-using FluentValidation;
+﻿using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using RichWebApi.Entities;
 using RichWebApi.Extensions;
 using RichWebApi.Hubs;
+using RichWebApi.Mappers;
 using RichWebApi.Models;
 using RichWebApi.Persistence;
 
@@ -36,7 +36,7 @@ public record PatchWeatherForecast(WeatherForecastDto WeatherForecast) : IReques
 					.FirstOrExceptionAsync(x => x.Date == date, ct), cancellationToken
 			);
 
-			mapper.Map(forecast, foundForecast);
+			mapper.Patch(foundForecast, forecast);
 			await database.PersistAsync(cancellationToken);
 			await hubContext.Clients
 				.Group(WeatherHubConstants.GroupName)

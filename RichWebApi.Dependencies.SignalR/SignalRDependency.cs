@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RichWebApi.Dependencies;
+using RichWebApi.Parts;
 
 namespace RichWebApi;
 

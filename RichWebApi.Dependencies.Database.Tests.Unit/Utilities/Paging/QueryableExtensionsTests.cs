@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using RichWebApi.Parts;
 using RichWebApi.Persistence;
 using RichWebApi.Tests.DependencyInjection;
 using RichWebApi.Tests.Entities;

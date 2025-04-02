@@ -8,6 +8,7 @@ using Microsoft.Extensions.Internal;
 using RichWebApi.Authorization;
 using RichWebApi.Config;
 using RichWebApi.Maintenance;
+using RichWebApi.Mappers;
 using RichWebApi.MediatR;
 using RichWebApi.Services;
 using RichWebApi.Startup;
@@ -23,7 +24,7 @@ public static class ServiceCollectionExtensions
 		services.TryAddTransient<IStartupActionCoordinator, StartupActionCoordinator>();
 		services.TryAddSingleton<ApplicationMaintenance>();
 		services.TryAddSingleton<ISystemClock, SystemClock>();
-
+		services.TryAddSingleton<IMapper, Mapper>();
 		services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 		services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
@@ -72,8 +73,7 @@ public static class ServiceCollectionExtensions
 					var parameter = validatorInterface.GetGenericArguments()[0];
 					return !parameter.IsAssignableTo(appConfig);
 				}) // app config validators have their own lifetime
-			.AddMediatR(x => x.RegisterServicesFromAssemblies(assemblies))
-			.AddAutoMapper(assemblies);
+			.AddMediatR(x => x.RegisterServicesFromAssemblies(assemblies));
 	}
 
 	public static IServiceCollection CollectCoreServicesFromAssembly(this IServiceCollection services,

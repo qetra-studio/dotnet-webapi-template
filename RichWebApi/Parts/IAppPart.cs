@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace RichWebApi;
+namespace RichWebApi.Parts;
 
 public interface IAppPart
 {

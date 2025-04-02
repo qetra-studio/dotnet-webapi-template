@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using RichWebApi.Dependencies;
+using RichWebApi.Parts;
 
 namespace RichWebApi;
 

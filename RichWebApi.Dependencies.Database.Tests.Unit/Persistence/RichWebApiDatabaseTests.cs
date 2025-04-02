@@ -2,6 +2,7 @@
 using NSubstitute;
 using Polly;
 using RichWebApi.Entities;
+using RichWebApi.Parts;
 using RichWebApi.Persistence;
 using RichWebApi.Tests.DependencyInjection;
 using RichWebApi.Tests.Entities;

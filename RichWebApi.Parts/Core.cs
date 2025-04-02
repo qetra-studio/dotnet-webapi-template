@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using RichWebApi.Parts;
 
 namespace RichWebApi;
 

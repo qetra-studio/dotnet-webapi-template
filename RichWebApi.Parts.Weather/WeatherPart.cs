@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RichWebApi.Config;
 using RichWebApi.Extensions;
+using RichWebApi.Parts;
 using RichWebApi.Services;
 using RichWebApi.Startup;
 using RichWebApi.Validation;

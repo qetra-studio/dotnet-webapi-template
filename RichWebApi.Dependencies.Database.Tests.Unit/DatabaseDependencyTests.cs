@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using RichWebApi.Entities.Configuration;
+using RichWebApi.Parts;
 using RichWebApi.Tests.DependencyInjection;
 using RichWebApi.Tests.Entities;
 using RichWebApi.Tests.Logging;
@@ -49,7 +50,7 @@ public class DatabaseDependencyTests : UnitTest
 			.ContainItemsAssignableTo<IEntityConfiguration<ConfigurableEntity>>();
 
 	private static DependencyContainerFixture SetEnvironment(DependencyContainerFixture container,
-	                                                         string environmentName)
+															 string environmentName)
 		=> container
 			.ReplaceWithMock<IHostEnvironment>(mock => mock.EnvironmentName
 				.Returns(environmentName));

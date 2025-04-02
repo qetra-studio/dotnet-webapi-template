@@ -1,4 +1,6 @@
-﻿namespace RichWebApi;
+﻿using RichWebApi.Dependencies;
+
+namespace RichWebApi;
 
 public static class AppDependenciesCollectionExtensions
 {

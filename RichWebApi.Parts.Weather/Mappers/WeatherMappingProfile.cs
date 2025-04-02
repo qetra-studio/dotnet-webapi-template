@@ -1,6 +1,0 @@
-﻿using JetBrains.Annotations;
-
-namespace RichWebApi.Mappers;
-
-[UsedImplicitly]
-public class WeatherMappingProfile : MappingCollectorProfile;

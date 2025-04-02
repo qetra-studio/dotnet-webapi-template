@@ -1,4 +1,6 @@
-﻿namespace RichWebApi;
+﻿using RichWebApi.Parts;
+
+namespace RichWebApi;
 
 public static class AppPartsCollectionExtensions
 {

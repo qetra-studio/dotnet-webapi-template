@@ -1,10 +1,9 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using FluentValidation;
+﻿using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
 using RichWebApi.Entities;
 using RichWebApi.Extensions;
+using RichWebApi.Mappers;
 using RichWebApi.Models;
 using RichWebApi.Persistence;
 
@@ -28,7 +27,8 @@ public record GetWeatherForecast(DateTime Date) : IRequest<WeatherForecastDto>
 			return database.ReadAsync((db, ct) => db.Context
 				.Set<WeatherForecast>()
 				.Where(x => x.Date == date)
-				.ProjectTo<WeatherForecastDto>(mapper.ConfigurationProvider)
+				.Select(x => 1)
+				.ProjectTo<WeatherForecastDto>(mapper)
 				.FirstOrExceptionAsync(ct), cancellationToken);
 		}
 	}

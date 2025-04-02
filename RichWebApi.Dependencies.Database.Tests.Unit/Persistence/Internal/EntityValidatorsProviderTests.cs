@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using RichWebApi.Config;
 using RichWebApi.Exceptions;
+using RichWebApi.Parts;
 using RichWebApi.Persistence.Internal;
 using RichWebApi.Tests.DependencyInjection;
 using RichWebApi.Tests.Entities;

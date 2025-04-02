@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using RichWebApi.Parts;
 using RichWebApi.Persistence.Interceptors;
 using RichWebApi.Services;
 using RichWebApi.Tests.DependencyInjection;
@@ -20,7 +21,7 @@ public class AuditSaveChangesInterceptorTests : UnitTest
 	private readonly DependencyContainerFixture _container;
 
 	public AuditSaveChangesInterceptorTests(ITestOutputHelper testOutputHelper,
-	                                        UnitDependencyContainerFixture container) : base(testOutputHelper)
+											UnitDependencyContainerFixture container) : base(testOutputHelper)
 	{
 		var parts = new AppPartsCollection
 		{

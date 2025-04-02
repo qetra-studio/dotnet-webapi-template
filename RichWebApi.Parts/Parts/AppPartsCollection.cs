@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using JetBrains.Annotations;
 
-namespace RichWebApi;
+namespace RichWebApi.Parts;
 
 public sealed class AppPartsCollection : IAppPartsCollection
 {

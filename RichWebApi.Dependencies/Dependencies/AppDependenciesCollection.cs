@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace RichWebApi;
+namespace RichWebApi.Dependencies;
 
 public sealed class AppDependenciesCollection : IAppDependenciesCollection
 {

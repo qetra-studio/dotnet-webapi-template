@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using RichWebApi.Dependencies;
 
 namespace RichWebApi;
 
