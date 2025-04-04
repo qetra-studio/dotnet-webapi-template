@@ -29,7 +29,6 @@ public record RegisterUser(RegisterDto Credentials) : IRequest<IActionResult>
 				Email = request.Credentials.Email,
 				PhoneNumber = request.Credentials.PhoneNumber
 			}, request.Credentials.Password);
-
 			return result.Succeeded
 				? new OkResult()
 				: result.ToBadRequestResult();

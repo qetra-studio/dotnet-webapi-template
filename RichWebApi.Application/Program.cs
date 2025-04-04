@@ -22,6 +22,7 @@ using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 
 [assembly: MapperDefaults(ThrowOnMappingNullMismatch = true, ThrowOnPropertyMappingNullMismatch = true)]
+
 namespace RichWebApi;
 
 public class Program
@@ -137,9 +138,9 @@ public class Program
 														IAppPartsCollection parts,
 														IAppDependenciesCollection dependencies)
 	{
+		services.AddDependencyServices(dependencies, parts);
 		services.AddCore();
 		services.AddOptionsWithValidator<StartupConfig, StartupConfig.Validator>("Startup");
-		services.AddDependencyServices(dependencies, parts);
 		services.AddMvcCore(x => { x.Filters.Add<ExceptionFilter>(); }).AddApplicationPart(typeof(Program).Assembly);
 		services.CollectCoreServicesFromAssembly(typeof(Program).Assembly);
 		services.AddAppParts(parts);
@@ -210,10 +211,11 @@ public class Program
 		app.UseMiddleware<MaintenanceMiddleware>();
 
 		app.UseHttpsRedirection();
-		app.MapControllers();
 		app.UseRouting();
 
 		app.UseDependencies(dependencies);
+
+		app.MapControllers();
 
 		return app;
 	}

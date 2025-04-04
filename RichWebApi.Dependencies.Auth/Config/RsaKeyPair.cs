@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using Destructurama.Attributed;
 using FluentValidation;
 using JetBrains.Annotations;
@@ -6,16 +6,16 @@ using JetBrains.Annotations;
 namespace RichWebApi.Config;
 
 [UsedImplicitly]
-public sealed class RsaKey
+public sealed class RsaKeyPair
 {
 	[NotLogged]
 	public string Public { get; set; } = null!;
-	
+
 	[NotLogged]
 	public string Private { get; set; } = null!;
 
 	[UsedImplicitly]
-	public sealed class Validator : AbstractValidator<RsaKey>
+	public sealed class Validator : AbstractValidator<RsaKeyPair>
 	{
 		public Validator()
 		{
@@ -28,10 +28,10 @@ public sealed class RsaKey
 				}
 				catch (Exception)
 				{
-					ctx.AddFailure(nameof(Private),"Invalid private RSA key");
+					ctx.AddFailure(nameof(Private), "Invalid private RSA key");
 				}
 			});
-			
+
 			RuleFor(x => x.Public).NotNull().NotEmpty().Custom((x, ctx) =>
 			{
 				try
@@ -41,7 +41,7 @@ public sealed class RsaKey
 				}
 				catch (Exception)
 				{
-					ctx.AddFailure(nameof(Public),"Invalid public RSA key");
+					ctx.AddFailure(nameof(Public), "Invalid public RSA key");
 				}
 			});
 		}

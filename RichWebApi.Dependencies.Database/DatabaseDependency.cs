@@ -9,6 +9,7 @@ using RichWebApi.Config;
 using RichWebApi.Dependencies;
 using RichWebApi.Entities;
 using RichWebApi.Entities.Configuration;
+using RichWebApi.Entities.OpenIddict;
 using RichWebApi.Parts;
 using RichWebApi.Persistence;
 using RichWebApi.Persistence.Interceptors;
@@ -39,23 +40,26 @@ internal class DatabaseDependency(IHostEnvironment environment, DatabaseDependen
 		var migrationsAssemblyName = $"{typeof(DatabaseDependency).Assembly.GetName().Name}.Migrations";
 		if (!options.SkipDatabaseClientSetup)
 		{
-			services.AddDbContext<RichWebApiDbContext>((sp, dbContextOptionsBuilder) =>
+			services.AddDbContext<RichWebApiDbContext>((sp, builder) =>
 			{
-				dbContextOptionsBuilder.AddInterceptors(sp.GetServices<IOrderedInterceptor>().OrderBy(x => x.Order));
+				builder.AddInterceptors(sp.GetServices<IOrderedInterceptor>().OrderBy(x => x.Order));
 				var dbConfig = sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionConfig>>()
 					.CurrentValue;
 
 				if (environment.IsDevelopment())
 				{
-					dbContextOptionsBuilder.EnableSensitiveDataLogging();
+					builder.EnableSensitiveDataLogging();
 				}
 
-				dbContextOptionsBuilder
+				builder
 					.UseSqlServer(GetConnectionString(sp),
-						builder => builder
+						b => b
 							.EnableRetryOnFailure(dbConfig.Retries)
 							.CommandTimeout(dbConfig.Timeout)
 							.MigrationsAssembly(migrationsAssemblyName));
+				builder
+					.UseOpenIddict<RichWebApiOpenApplication, RichWebApiOpenAuthorization, RichWebApiOpenScope,
+						RichWebApiOpenToken, Guid>();
 			}, ServiceLifetime.Transient);
 		}
 

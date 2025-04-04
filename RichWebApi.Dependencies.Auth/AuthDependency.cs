@@ -3,21 +3,26 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using OpenIddict.Server;
 using RichWebApi.Authorization;
 using RichWebApi.Config;
 using RichWebApi.Dependencies;
 using RichWebApi.Entities.Identity;
+using RichWebApi.Entities.OpenIddict;
 using RichWebApi.Enums;
 using RichWebApi.Extensions;
 using RichWebApi.Parts;
 using RichWebApi.Services;
 using RichWebApi.Services.Jwt;
+using RichWebApi.Startup;
 using RichWebApi.Validation;
 using Riok.Mapperly.Abstractions;
 
@@ -36,8 +41,8 @@ internal class AuthDependency : IAppDependency
 		var sp = services.BuildServiceProvider();
 		var authConfig = sp.GetRequiredService<IOptionsMonitor<AuthConfig>>();
 		var bearerConfig = sp.GetRequiredService<IOptionsMonitor<BearerConfig>>();
-		var signingKeys = UpdateSigningKeys(authConfig.CurrentValue);
-		authConfig.OnChange(x => signingKeys = UpdateSigningKeys(x));
+		var keys = UpdateKeys(authConfig.CurrentValue);
+		authConfig.OnChange(x => keys = UpdateKeys(x));
 
 		services.AddIdentity<RichWebApiUser, RichWebApiRole>(options => { options.User.RequireUniqueEmail = true; })
 			.AddEntityFrameworkStores<RichWebApiDbContext>()
@@ -78,11 +83,34 @@ internal class AuthDependency : IAppDependency
 					ValidateIssuerSigningKey = true,
 					ClockSkew = TimeSpan.Zero,
 					IssuerSigningKeyResolver =
-						(_, _, kid, _) => signingKeys.Where(x => x.Key == kid).Select(x => x.Value),
+						(_, _, kid, _) => keys.Where(x => x.Key == kid).Select(x => x.Value.Public),
 					ValidIssuer = bearerConfig.CurrentValue.Issuer,
 					ValidAudience = bearerConfig.CurrentValue.Audience,
 				};
 			});
+		services.AddAuthorization();
+
+		services.AddOpenIddict()
+			.AddCore(options =>
+			{
+				options.UseEntityFrameworkCore().UseDbContext<RichWebApiDbContext>()
+					.ReplaceDefaultEntities<RichWebApiOpenApplication, RichWebApiOpenAuthorization, RichWebApiOpenScope,
+						RichWebApiOpenToken, Guid>();
+			})
+			.AddServer(options =>
+			{
+				options.UseAspNetCore()
+					.EnableTokenEndpointPassthrough();
+
+				options.AddSigningKeys(keys.Values.Select(x => x.Public));
+				options.AddEncryptionKeys(keys.Values.Select(x => x.Private));
+
+				options.SetJsonWebKeySetEndpointUris(".well-known/jwks.json");
+				options.SetTokenEndpointUris("auth/connect/token");
+				options.AllowClientCredentialsFlow();
+			});
+
+
 
 		services.AddScoped<IAuthorizationHandler, SecurityStampRequirement.Handler>();
 		var builder = services.AddAuthorizationBuilder();
@@ -91,19 +119,26 @@ internal class AuthDependency : IAppDependency
 			.RequireAuthenticatedUser()
 			.RequireSecurityStamp());
 
+		services.AddStartupAction<OpenIddictInit>();
+
 		return;
 
-		IReadOnlyDictionary<string, RsaSecurityKey> UpdateSigningKeys(AuthConfig cfg)
+		IReadOnlyDictionary<string, RsaKeyPair> UpdateKeys(AuthConfig cfg)
 			=> cfg.RsaKeys.ToDictionary(x => x.Key, x =>
 			{
-				var rsa = RSA.Create();
-				rsa.ImportRSAPublicKey(Convert.FromBase64String(x.Value.Public), out _);
-				return new RsaSecurityKey(rsa);
+				var publicRsa = RSA.Create();
+				publicRsa.ImportRSAPrivateKey(Convert.FromBase64String(x.Value.Private), out _);
+				var privateRsa = RSA.Create();
+				privateRsa.ImportRSAPrivateKey(Convert.FromBase64String(x.Value.Private), out _);
+				return new RsaKeyPair(new RsaSecurityKey(publicRsa), new RsaSecurityKey(privateRsa));
 			});
 	}
 
+	private record RsaKeyPair(RsaSecurityKey Public, RsaSecurityKey Private);
+
 	public void ConfigureApplication(IApplicationBuilder builder)
 	{
+		builder.UseAuthentication();
 		builder.UseAuthorization();
 	}
 }

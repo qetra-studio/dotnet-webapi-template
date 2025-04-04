@@ -157,7 +157,7 @@ public static class LoggerExtensions
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void LogPerformanceStart(this ILogger logger)
-		=> logger.Log(PerformanceLoggingLevel, "PERF: Start");
+		=> logger.Log(LogLevel.Debug, "PERF: Start");
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void LogPerformanceEnd(this ILogger logger, Stopwatch sw)
