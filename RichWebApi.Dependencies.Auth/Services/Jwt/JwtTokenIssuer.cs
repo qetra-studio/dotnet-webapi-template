@@ -55,7 +55,7 @@ internal sealed class JwtTokenIssuer(
 		var keys = config.CurrentValue.RsaKeys;
 		var k = keys.ElementAt(_random.Next(0, keys.Count));
 		var rsa = RSA.Create();
-		rsa.ImportRSAPrivateKey(Convert.FromBase64String(k.Value.Private), out _);
+		rsa.ImportFromPem(k.Value.Private);
 		var rsaKey = new RsaSecurityKey(rsa)
 		{
 			KeyId = k.Key

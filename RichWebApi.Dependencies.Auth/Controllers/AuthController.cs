@@ -1,15 +1,16 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RichWebApi.Authorization;
 using RichWebApi.Enums;
-using RichWebApi.Extensions;
 using RichWebApi.Handlers.Auth;
 using RichWebApi.Models;
 
 namespace RichWebApi.Controllers;
 
+[EnableCors("auth")]
 [ApiController]
 [Route("auth")]
 public class AuthController(IMediator mediator) : ControllerBase

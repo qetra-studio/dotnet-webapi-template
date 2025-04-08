@@ -5,6 +5,7 @@ using Destructurama;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using RichWebApi.Config;
 using RichWebApi.Dependencies;
@@ -127,7 +128,7 @@ public class Program
 	private static IAppDependenciesCollection EnrichWithDependencies(IAppDependenciesCollection collection,
 																	 IWebHostEnvironment env)
 		=> collection
-			.AddAuth()
+			.AddAuth(env)
 			.AddDatabase(env)
 			.AddSignalR(c => c.AddWeather());
 
@@ -156,6 +157,28 @@ public class Program
 		services.AddSwaggerGen(s =>
 		{
 			s.SupportNonNullableReferenceTypes();
+			s.AddSecurityDefinition("Authentication", new OpenApiSecurityScheme
+			{
+				Type = SecuritySchemeType.OpenIdConnect,
+				Description = "Description",
+				In = ParameterLocation.Header,
+				Name = HeaderNames.Authorization,
+				Flows = new OpenApiOAuthFlows
+				{
+					ClientCredentials = new OpenApiOAuthFlow
+					{
+						AuthorizationUrl = new Uri("/auth/connect/authorize", UriKind.Relative),
+						TokenUrl = new Uri("/auth/connect/token", UriKind.Relative)
+					},
+					AuthorizationCode = new OpenApiOAuthFlow
+					{
+						AuthorizationUrl = new Uri("/auth/connect/authorize", UriKind.Relative),
+						TokenUrl = new Uri("/auth/connect/token", UriKind.Relative)
+					}
+				},
+				OpenIdConnectUrl = new Uri("/.well-known/openid-configuration", UriKind.Relative)
+			});
+
 			s.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Name = "Authorization",
@@ -174,12 +197,13 @@ public class Program
 						Reference = new OpenApiReference
 						{
 							Type = ReferenceType.SecurityScheme,
-							Id = "Bearer"
+							Id = "Authentication"
 						}
 					},
 					[]
 				}
 			});
+
 			s.SwaggerDoc("v1", new OpenApiInfo
 			{
 				Title = "RichWebApi",
@@ -197,13 +221,6 @@ public class Program
 
 	private static WebApplication ConfigureWebApp(WebApplication app, IAppDependenciesCollection dependencies)
 	{
-		// Configure the HTTP request pipeline.
-		if (app.Environment.IsDevelopment())
-		{
-			app.UseSwagger();
-			app.UseSwaggerUI();
-		}
-
 		app.UseHealthChecks(new PathString("/api/health"), new HealthCheckOptions
 		{
 			ResponseWriter = HealthChecksResponseWriter.WriteAsync
@@ -212,6 +229,13 @@ public class Program
 
 		app.UseHttpsRedirection();
 		app.UseRouting();
+		app.UseCors("global");
+
+		if (app.Environment.IsDevelopment())
+		{
+			app.UseSwagger();
+			app.UseSwaggerUI(c => { c.OAuthUsePkce(); });
+		}
 
 		app.UseDependencies(dependencies);
 

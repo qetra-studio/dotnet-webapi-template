@@ -15,7 +15,7 @@ public static class RichWebApiClaimFactory
 		=> new(RichWebApiJwtClaimTypes.Action, action.ToString("G").ToLower());
 
 	public static Claim UserIdClaim(RichWebApiUser user)
-		=> new(JwtRegisteredClaimNames.Sub, user.Id.ToString("N"));
+		=> new(JwtRegisteredClaimNames.Sub, user.Id.ToString("D"));
 
 	public static Claim StampClaim(RichWebApiUser user)
 		=> new(RichWebApiJwtClaimTypes.Stamp, user.SecurityStamp!);

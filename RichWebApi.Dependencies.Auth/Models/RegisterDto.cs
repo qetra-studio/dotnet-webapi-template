@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using Destructurama.Attributed;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using RichWebApi.Entities.Identity;
 using RichWebApi.Validation;
@@ -8,9 +9,9 @@ namespace RichWebApi.Models;
 public sealed class RegisterDto : IInbound
 {
 	public string UserName { get; set; } = null!;
-	public string Password { get; set; } = null!;
+	[NotLogged] public string Password { get; set; } = null!;
 	public string Email { get; set; } = null!;
-	public string? PhoneNumber { get; set; }
+	[NotLogged] public string? PhoneNumber { get; set; }
 
 	public sealed class Validator : AbstractValidator<RegisterDto>
 	{

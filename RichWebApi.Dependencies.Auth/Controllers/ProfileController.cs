@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using OpenIddict.Validation.AspNetCore;
 using RichWebApi.Authorization;
 using RichWebApi.Enums;
 using RichWebApi.Handlers.Profile;
@@ -12,7 +13,7 @@ namespace RichWebApi.Controllers;
 [Route("profile")]
 [ApiController]
 [Authorize]
-[AuthPurpose(RichWebApiAuthPurpose.Access)]
+[Scope("profile")]
 public sealed class ProfileController(IMediator mediator) : ControllerBase
 {
 	[HttpGet(Name = nameof(GetCurrentUserProfile))]

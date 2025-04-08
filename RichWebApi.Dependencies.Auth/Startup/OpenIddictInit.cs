@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using OpenIddict.Abstractions;
-using RichWebApi.Entities.OpenIddict;
 using static OpenIddict.Abstractions.OpenIddictConstants.Permissions;
+using static OpenIddict.Abstractions.OpenIddictConstants.Requirements;
 
 namespace RichWebApi.Startup;
 
@@ -12,35 +12,70 @@ internal sealed class OpenIddictInit(IOpenIddictApplicationManager manager) : IA
 
 	public async Task PerformActionAsync(CancellationToken cancellationToken = default)
 	{
-		OpenIddictApplicationDescriptor appDescriptor = new()
-		{
-			ClientId = "test_client",
-			ClientSecret = "test_secret",
-			ClientType = OpenIddictConstants.ClientTypes.Confidential,
-			DisplayName = "App Test",
-			RedirectUris = { new Uri("https://localhost:4001/callback") },
-			Permissions =
+		OpenIddictApplicationDescriptor[] descriptors =
+		[
+			new()
 			{
-				Endpoints.Token,
-				Endpoints.Authorization,
+				ClientId = "test_client",
+				ClientSecret = "test_secret",
+				ClientType = OpenIddictConstants.ClientTypes.Confidential,
+				DisplayName = "Test API",
+				RedirectUris =
+				{
+					new Uri("https://local.richwebapi.com/callback")
+				},
+				Permissions =
+				{
+					Endpoints.Token,
+					GrantTypes.ClientCredentials,
+				},
+				ApplicationType = OpenIddictConstants.ApplicationTypes.Web
+			},
+			new()
+			{
+				ClientId = "test_app_client",
+				ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
+				DisplayName = "Test App",
+				ClientType = OpenIddictConstants.ClientTypes.Public,
+				PostLogoutRedirectUris =
+				{
+					new Uri("https://local.richwebapi.com:7262/signout-callback-oidc"),
+					new Uri("https://localhost:7262/signout-callback-oidc")
+				},
+				RedirectUris =
+				{
+					new Uri("https://local.richwebapi.com:7262/swagger/oauth2-redirect.html"),
+					new Uri("https://localhost:7262/swagger/oauth2-redirect.html")
+				},
+				Permissions =
+				{
+					Endpoints.Authorization,
+					Endpoints.Token,
 
-				GrantTypes.ClientCredentials,
-				GrantTypes.AuthorizationCode,
+					GrantTypes.AuthorizationCode,
 
-				ResponseTypes.Code,
+					ResponseTypes.Code,
 
-				Prefixes.Scope + "test_scope"
+					Scopes.Email,
+					Scopes.Profile,
+				},
+				Requirements =
+				{
+					Features.ProofKeyForCodeExchange
+				}
 			}
-		};
-
-		var client = await manager.FindByClientIdAsync(appDescriptor.ClientId, cancellationToken);
-		if (client == null)
+		];
+		foreach (var descriptor in descriptors)
 		{
-			await manager.CreateAsync(appDescriptor, cancellationToken);
-		}
-		else
-		{
-			await manager.UpdateAsync(client, appDescriptor, cancellationToken);
+			var client = await manager.FindByClientIdAsync(descriptor.ClientId!, cancellationToken);
+			if (client == null)
+			{
+				await manager.CreateAsync(descriptor, cancellationToken);
+			}
+			else
+			{
+				await manager.UpdateAsync(client, descriptor, cancellationToken);
+			}
 		}
 	}
 }

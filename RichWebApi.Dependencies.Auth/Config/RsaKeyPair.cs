@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 using Destructurama.Attributed;
 using FluentValidation;
 using JetBrains.Annotations;
@@ -24,7 +25,7 @@ public sealed class RsaKeyPair
 				try
 				{
 					using var rsa = RSA.Create();
-					rsa.ImportRSAPrivateKey(Convert.FromBase64String(x), out _);
+					rsa.ImportFromPem(x);
 				}
 				catch (Exception)
 				{
@@ -37,7 +38,7 @@ public sealed class RsaKeyPair
 				try
 				{
 					using var rsa = RSA.Create();
-					rsa.ImportRSAPublicKey(Convert.FromBase64String(x), out _);
+					rsa.ImportFromPem(x);
 				}
 				catch (Exception)
 				{
