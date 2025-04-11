@@ -16,6 +16,10 @@ public sealed class LoginDto : IInbound
 
 	[NotLogged]
 	public string Password { get; set; } = null!;
+	
+	public bool RememberMe { get; set; }
+	
+	public string? TwoFactorToken { get; set; }
 
 	public sealed class Validator : AbstractValidator<LoginDto>
 	{
@@ -53,6 +57,8 @@ public sealed class LoginDto : IInbound
 				}
 			});
 			RuleFor(x => x.Password).NotNull().NotEmpty().RichWebApiPassword(manager);
+			
+			RuleFor(x => x.TwoFactorToken).MaximumLength(6).When(x => !string.IsNullOrEmpty(x.TwoFactorToken));
 		}
 	}
 }

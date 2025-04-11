@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -10,16 +10,16 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using OpenIddict.Abstractions;
 using OpenIddict.Validation.AspNetCore;
-using RichWebApi.Authorization.Requirements;
+using RichWebApi.Authorization.Schemes;
+using RichWebApi.Authorization.Schemes.Challenge;
 using RichWebApi.Config;
 using RichWebApi.Dependencies;
 using RichWebApi.Entities.Identity;
 using RichWebApi.Entities.OpenIddict;
 using RichWebApi.Parts;
 using RichWebApi.Services;
-using RichWebApi.Services.Jwt;
+using RichWebApi.Services.OpenIddict;
 using RichWebApi.Startup;
 using RichWebApi.Validation;
 using Riok.Mapperly.Abstractions;
@@ -35,61 +35,42 @@ internal class AuthDependency(IWebHostEnvironment env) : IAppDependency
 	public void ConfigureServices(IServiceCollection services, IAppPartsCollection parts)
 	{
 		services.AddOptionsWithValidator<AuthConfig, AuthConfig.Validator>("Dependencies:Auth");
-		services.AddOptionsWithValidator<BearerConfig, BearerConfig.Validator>("Dependencies:Auth:Bearer");
 		services.AddOptionsWithValidator<MfaConfig, MfaConfig.Validator>("Dependencies:Auth:Mfa");
 		var sp = services.BuildServiceProvider();
 		var authConfig = sp.GetRequiredService<IOptionsMonitor<AuthConfig>>();
-		var bearerConfig = sp.GetRequiredService<IOptionsMonitor<BearerConfig>>();
 		var keys = UpdateKeys(authConfig.CurrentValue);
 		authConfig.OnChange(x => keys = UpdateKeys(x));
-
-		services.AddIdentityCore<RichWebApiUser>(options =>
-			{
-				options.ClaimsIdentity.UserIdClaimType = Claims.Subject;
-				options.ClaimsIdentity.EmailClaimType = Claims.Email;
-				options.ClaimsIdentity.RoleClaimType = Claims.Role;
-				options.ClaimsIdentity.UserNameClaimType = Claims.Name;
-				options.User.RequireUniqueEmail = true;
-			})
-			.AddRoles<RichWebApiRole>()
-			.AddSignInManager()
-			.AddEntityFrameworkStores<RichWebApiDbContext>()
-			.AddDefaultTokenProviders();
-		services.AddSingleton<IJwtTokenIssuer, JwtTokenIssuer>();
-		services.TryAddScoped<IRichWebApiUserContextAccessor, RichWebApiUserContextAccessor>();
-		services.TryAddScoped<IIdentityProvider>(serviceProvider
-			=> new AuthIdentityProvider(
-				new Lazy<IRichWebApiUserContextAccessor>(serviceProvider
-					.GetRequiredService<IRichWebApiUserContextAccessor>)));
-
 
 		IssuerSigningKeyResolver issuerSigningKeyResolver
 			= (_, _, kid, _) => keys
 				.Where(x => x.Key == kid)
 				.Select(x => x.Value);
-		services.AddAuthentication(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)
-			.AddJwtBearer(options =>
+
+		
+		AddRichWebApiAuthServices();
+		AddIdentityServices();
+		AddOpenIddictServices();
+		
+		services.AddAuthentication(b =>
 			{
-				options.TokenValidationParameters = new TokenValidationParameters
-				{
-					ValidateIssuer = true,
-					ValidateAudience = true,
-					ValidateLifetime = true,
-					ValidateIssuerSigningKey = true,
-					ClockSkew = TimeSpan.Zero,
-					IssuerSigningKeyResolver =
-						issuerSigningKeyResolver,
-					ValidIssuer = bearerConfig.CurrentValue.Issuer,
-					ValidAudience = bearerConfig.CurrentValue.Audience,
-				};
-				options.MapInboundClaims = false;
-			});
-		services.AddAuthorization();
+				b.DefaultScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+				b.DefaultChallengeScheme = RichWebApiAuthConstants.ChallengeScheme;
+			})
+			.AddScheme<AuthenticationSchemeOptions, RichWebApiChallengeHandler>(RichWebApiAuthConstants.ChallengeScheme, RichWebApiAuthConstants.ChallengeScheme, _ => {});
+
 		services.ConfigureApplicationCookie(options =>
 		{
+			options.Cookie.HttpOnly = true;
+			options.ExpireTimeSpan = TimeSpan.FromDays(30);
+			options.SlidingExpiration = true;
+			options.Cookie.IsEssential = true;
+			options.Cookie.SameSite = SameSiteMode.Lax;
+			options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+
+			options.Cookie.MaxAge = TimeSpan.FromDays(30);
 			options.Events.OnRedirectToLogin = context =>
 			{
-				context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+				context.Response.Redirect($"https://local.richwebapi.com/login?returnUrl={context.RedirectUri}");
 				return Task.CompletedTask;
 			};
 			options.Events.OnRedirectToAccessDenied = context =>
@@ -98,73 +79,8 @@ internal class AuthDependency(IWebHostEnvironment env) : IAppDependency
 				return Task.CompletedTask;
 			};
 		});
-
-		services.AddCors(options =>
-		{
-			options.AddPolicy("auth", builder =>
-			{
-				if (env.IsDevelopment())
-				{
-					builder.WithOrigins("https://local.richwebapi.com");
-				}
-
-				builder.WithOrigins("https://identity.richwebapi.com")
-					.WithMethods("POST");
-			});
-
-			options.AddPolicy("global", builder => builder
-				.WithOrigins("https://local.richwebapi.com", "https://local.richwebapi.com:7262",
-					"https://localhost:7262")
-				.AllowAnyHeader()
-				.AllowCredentials()
-				.AllowAnyMethod()
-				.WithExposedHeaders());
-		});
-
-		services.AddOpenIddict()
-			.AddCore(options =>
-			{
-				options.UseEntityFrameworkCore().UseDbContext<RichWebApiDbContext>()
-					.ReplaceDefaultEntities<RichWebApiOpenApplication, RichWebApiOpenAuthorization, RichWebApiOpenScope,
-						RichWebApiOpenToken, Guid>();
-			})
-			.AddServer(options =>
-			{
-				options
-					.AllowClientCredentialsFlow()
-					.AllowAuthorizationCodeFlow()
-					.RequireProofKeyForCodeExchange();
-
-				options.RegisterScopes(Scopes.OpenId, Scopes.Profile, Scopes.Email);
-
-				options.UseAspNetCore()
-					.EnableTokenEndpointPassthrough()
-					.EnableAuthorizationEndpointPassthrough();
-
-				options.AddSigningKeys(keys.Values);
-				options.AddEncryptionKeys(keys.Values);
-
-				options
-					.SetJsonWebKeySetEndpointUris(".well-known/jwks.json")
-					.SetTokenEndpointUris("auth/connect/token")
-					.SetAuthorizationEndpointUris("auth/connect/authorize");
-				if (env.IsDevelopment())
-				{
-					options.DisableAccessTokenEncryption();
-				}
-			})
-			.AddValidation(options =>
-			{
-				options.Configure(o =>
-				{
-					o.TokenValidationParameters.ValidateLifetime = true;
-					o.TokenValidationParameters.ValidateIssuerSigningKey = true;
-					o.TokenValidationParameters.IssuerSigningKeyResolver = issuerSigningKeyResolver;
-				});
-				options.UseLocalServer();
-				options.UseAspNetCore();
-			});
-
+		
+		services.AddAuthorization();
 		var builder = services.AddAuthorizationBuilder();
 
 		builder.AddDefaultPolicy("default", x =>
@@ -173,9 +89,109 @@ internal class AuthDependency(IWebHostEnvironment env) : IAppDependency
 			x.RequireAuthenticatedUser();
 		});
 
-		services.AddStartupAction<OpenIddictInit>();
-
 		return;
+
+		void AddOpenIddictServices()
+		{
+			services.AddOpenIddict()
+				.AddCore(options =>
+				{
+					options.UseEntityFrameworkCore().UseDbContext<RichWebApiDbContext>()
+						.ReplaceDefaultEntities<RichWebApiOpenApplication, RichWebApiOpenAuthorization, RichWebApiOpenScope,
+							RichWebApiOpenToken, Guid>();
+				})
+				.AddServer(options =>
+				{
+					options
+						.AllowClientCredentialsFlow()
+						.AllowAuthorizationCodeFlow()
+						.AllowRefreshTokenFlow()
+						.RequireProofKeyForCodeExchange();
+
+					options.RegisterScopes(Scopes.OpenId, Scopes.Profile, Scopes.Email);
+
+					options.UseAspNetCore()
+						.EnableTokenEndpointPassthrough()
+						.EnableAuthorizationEndpointPassthrough();
+					
+					options.AddSigningKeys(keys.Values);
+					options.AddEncryptionKeys(keys.Values);
+
+					options.SetIssuer("https://localhost:7262");
+					options
+						.SetJsonWebKeySetEndpointUris("https://localhost:7262/.well-known/jwks.json")
+						.SetTokenEndpointUris("https://localhost:7262/auth/connect/token")
+						.SetAuthorizationEndpointUris("https://localhost:7262/auth/connect/authorize")
+						.SetUserInfoEndpointUris("https://localhost:7262/auth/connect/userinfo");
+					if (env.IsDevelopment())
+					{
+						options.DisableAccessTokenEncryption();
+					}
+				})
+				.AddValidation(options =>
+				{
+					options.Configure(o =>
+					{
+						o.TokenValidationParameters.ValidateLifetime = true;
+						o.TokenValidationParameters.ValidateIssuerSigningKey = true;
+						o.TokenValidationParameters.IssuerSigningKeyResolver = issuerSigningKeyResolver;
+					});
+					options.UseLocalServer();
+					options.UseAspNetCore();
+				});
+			services.AddSingleton<IClaimDestinationsProvider, ClaimDestinationsProvider>();
+			services.AddStartupAction<OpenIddictInit>();
+		}
+
+		void AddIdentityServices()
+		{
+			services.AddIdentity<RichWebApiUser, RichWebApiRole>(options =>
+				{
+					options.ClaimsIdentity.UserIdClaimType = Claims.Subject;
+					options.ClaimsIdentity.EmailClaimType = Claims.Email;
+					options.ClaimsIdentity.RoleClaimType = Claims.Role;
+					options.ClaimsIdentity.UserNameClaimType = Claims.Name;
+					options.User.RequireUniqueEmail = true;
+				})
+				.AddEntityFrameworkStores<RichWebApiDbContext>()
+				.AddDefaultTokenProviders();
+			services.ConfigureApplicationCookie(options =>
+			{
+				options.Events.OnRedirectToLogin = context =>
+				{
+					context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+					return Task.CompletedTask;
+				};
+				options.Events.OnRedirectToAccessDenied = context =>
+				{
+					context.Response.StatusCode = StatusCodes.Status403Forbidden;
+					return Task.CompletedTask;
+				};
+			});
+		}
+
+		void AddRichWebApiAuthServices()
+		{
+			services.TryAddScoped<IRichWebApiUserContextAccessor, RichWebApiUserContextAccessor>();
+			services.TryAddScoped<IIdentityProvider>(serviceProvider
+				=> new AuthIdentityProvider(
+					new Lazy<IRichWebApiUserContextAccessor>(serviceProvider
+						.GetRequiredService<IRichWebApiUserContextAccessor>)));
+			
+			services.AddCors(options =>
+			{
+				options.AddPolicy("auth", builder =>
+				{
+					if (env.IsDevelopment())
+					{
+						builder.WithOrigins("https://local.richwebapi.com");
+					}
+
+					builder.WithOrigins("https://identity.richwebapi.com")
+						.WithMethods("POST");
+				});
+			});
+		}
 
 		IReadOnlyDictionary<string, SecurityKey> UpdateKeys(AuthConfig cfg)
 			=> cfg.RsaKeys.ToDictionary(x => x.Key, SecurityKey (x) =>

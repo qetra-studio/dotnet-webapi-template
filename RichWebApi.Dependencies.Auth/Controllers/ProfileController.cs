@@ -2,9 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OpenIddict.Validation.AspNetCore;
 using RichWebApi.Authorization;
-using RichWebApi.Enums;
 using RichWebApi.Handlers.Profile;
 using RichWebApi.Models;
 

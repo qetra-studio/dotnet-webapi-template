@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"description": "Ready-to-run template for aspnetcore web api solution",
 	"main": "index.js",
+  "type": "module",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/moons-domain/dotnet-webapi-template.git"
@@ -44,5 +45,8 @@
 		"nswag": "^14.1.0",
 		"prettier": "^3.3.3",
 		"replace": "^1.2.2"
+	},
+	"dependencies": {
+		"openapi-to-postmanv2": "^5.0.0"
 	}
 }

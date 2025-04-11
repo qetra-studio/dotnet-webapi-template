@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RichWebApi.Authorization;
-using RichWebApi.Enums;
 using RichWebApi.Handlers.Auth;
 using RichWebApi.Models;
 
@@ -24,17 +22,8 @@ public class AuthController(IMediator mediator) : ControllerBase
 	[HttpPost("login/credentials", Name = nameof(LoginWithCredentials))]
 	[ProducesResponseType<AuthSuccessDto>(StatusCodes.Status200OK)]
 	[ProducesResponseType<AuthErrorResponseDto>(StatusCodes.Status401Unauthorized)]
-	[ProducesResponseType<AuthActionRequiredDto>(StatusCodes.Status302Found)]
+	[ProducesResponseType<AuthErrorResponseDto>(StatusCodes.Status302Found)]
 	[AllowAnonymous]
 	public Task<IActionResult> LoginWithCredentials([FromBody] LoginDto request, CancellationToken token)
 		=> mediator.Send(new LoginWithCredentials(request), token);
-
-	[HttpPost("login/mfa", Name = nameof(LoginWithMfa))]
-	[ProducesResponseType<AuthSuccessDto>(StatusCodes.Status200OK)]
-	[ProducesResponseType<AuthErrorResponseDto>(StatusCodes.Status401Unauthorized)]
-	[Authorize]
-	[AuthPurpose(RichWebApiAuthPurpose.Auth)]
-	[AuthAction(RichWebApiAuthActions.Login)]
-	public Task<IActionResult> LoginWithMfa([FromBody] VerifyMfaDto request, CancellationToken token)
-		=> mediator.Send(new LoginWithMfa(request), token);
 }

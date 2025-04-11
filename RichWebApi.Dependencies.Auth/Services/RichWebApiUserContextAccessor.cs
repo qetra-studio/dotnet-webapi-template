@@ -23,4 +23,8 @@ internal sealed class RichWebApiUserContextAccessor(IHttpContextAccessor accesso
 
 		return Task.FromResult<RichWebApiUser?>(null);
 	});
+
+	public ClaimsPrincipal? UserPrincipal => accessor.HttpContext?.User;
+	
+	public HttpContext? HttpContext => accessor.HttpContext;
 }

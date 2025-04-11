@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using RichWebApi.Entities.Identity;
+﻿using RichWebApi.Entities.Identity;
 using RichWebApi.Mappers;
 using Riok.Mapperly.Abstractions;
 

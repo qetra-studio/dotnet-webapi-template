@@ -141,8 +141,9 @@ public class Program
 	{
 		services.AddDependencyServices(dependencies, parts);
 		services.AddCore();
+		services.AddDistributedMemoryCache();
 		services.AddOptionsWithValidator<StartupConfig, StartupConfig.Validator>("Startup");
-		services.AddMvcCore(x => { x.Filters.Add<ExceptionFilter>(); }).AddApplicationPart(typeof(Program).Assembly);
+		services.AddMvc(x => x.Filters.Add<ExceptionFilter>()).AddApplicationPart(typeof(Program).Assembly);
 		services.CollectCoreServicesFromAssembly(typeof(Program).Assembly);
 		services.AddAppParts(parts);
 		services.AddControllers()
@@ -153,9 +154,16 @@ public class Program
 				options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(namingPolicy));
 			});
 
+		services.AddCors(b =>
+		{
+			b.AddPolicy("global", builder => builder.WithOrigins("https://local.richwebapi.com")
+				.AllowAnyMethod());
+		});
+
 		services.AddEndpointsApiExplorer();
 		services.AddSwaggerGen(s =>
 		{
+			s.ResolveConflictingActions(descriptions => descriptions.First());
 			s.SupportNonNullableReferenceTypes();
 			s.AddSecurityDefinition("Authentication", new OpenApiSecurityScheme
 			{

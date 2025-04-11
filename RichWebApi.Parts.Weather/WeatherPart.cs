@@ -21,6 +21,6 @@ internal class WeatherPart : IAppPart
 		services.AddCronService<WeatherWeekFillerService>();
 		services.AddStartupAction<FillWeatherWeekAction>();
 		services.AddAuthorizationBuilder()
-			.AddAccessPolicy("weather", x => x.RequireClaim("scope", "weather"));
+			.AddScopePolicy("weather");
 	}
 }

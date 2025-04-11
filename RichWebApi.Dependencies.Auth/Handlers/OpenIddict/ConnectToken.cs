@@ -2,35 +2,52 @@
 using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
+using OpenIddict.Core;
 using OpenIddict.Server.AspNetCore;
 using RichWebApi.Entities.Identity;
+using RichWebApi.Entities.OpenIddict;
+using RichWebApi.Extensions;
+using RichWebApi.Services.OpenIddict;
+using RichWebApi.Validation;
 using static OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreConstants;
 using SignInResult = Microsoft.AspNetCore.Mvc.SignInResult;
 
 namespace RichWebApi.Handlers.OpenIddict;
 
-public record Exchange(OpenIddictRequest Request) : IRequest<IActionResult>
+public record ConnectToken : IRequest<IActionResult>
 {
 	[UsedImplicitly]
-	public class Validator : AbstractValidator<Exchange>;
+	public class Validator : AbstractValidator<ConnectToken>
+	{
+		public Validator(IHttpContextAccessor accessor)
+		{
+			RuleFor(x => x)
+				.HasOpenIddictServerRequest(accessor,
+					request => request.IsClientCredentialsGrantType()
+					           || request.IsAuthorizationCodeGrantType()
+					           || request.IsRefreshTokenGrantType());
+		}
+	}
 
 	[UsedImplicitly]
-	internal class ExchangeHandler(
-		IOpenIddictApplicationManager manager,
+	internal class ConnectTokenHandler(
+		OpenIddictApplicationManager<RichWebApiOpenApplication> manager,
+		OpenIddictScopeManager<RichWebApiOpenScope> scopeManager,
 		UserManager<RichWebApiUser> userManager,
 		SignInManager<RichWebApiUser> signInManager,
-		IHttpContextAccessor accessor) : IRequestHandler<Exchange, IActionResult>
+		IClaimDestinationsProvider destinationsProvider,
+		IHttpContextAccessor accessor) : IRequestHandler<ConnectToken, IActionResult>
 	{
-		public Task<IActionResult> Handle(Exchange exchange, CancellationToken cancellationToken)
+		public Task<IActionResult> Handle(ConnectToken exchange, CancellationToken cancellationToken)
 		{
-			var request = exchange.Request;
+			var request = accessor.HttpContext!.GetOpenIddictServerRequest()!;
 			return request switch
 			{
 				_ when request.IsClientCredentialsGrantType() => HandleClientCredentialsAsync(request,
@@ -43,13 +60,13 @@ public record Exchange(OpenIddictRequest Request) : IRequest<IActionResult>
 			};
 		}
 
-		private async Task<IActionResult> HandleAuthorizationCodeAsync(OpenIddictRequest request,
-																	   CancellationToken cancellationToken)
+		private async Task<IActionResult> HandleAuthorizationCodeAsync(OpenIddictRequest _,
+		                                                               CancellationToken cancellationToken)
 		{
 			// Retrieve the claims principal stored in the authorization code/refresh token.
 			var result =
 				await accessor.HttpContext!.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-
+			cancellationToken.ThrowIfCancellationRequested();
 			// Retrieve the user profile corresponding to the authorization code/refresh token.
 			var claim = result.Principal?.GetClaim(OpenIddictConstants.Claims.Subject);
 			if (string.IsNullOrEmpty(claim))
@@ -69,6 +86,8 @@ public record Exchange(OpenIddictRequest Request) : IRequest<IActionResult>
 					}));
 			}
 
+			cancellationToken.ThrowIfCancellationRequested();
+
 			// Ensure the user is still allowed to sign in.
 			if (!await signInManager.CanSignInAsync(user))
 			{
@@ -81,6 +100,8 @@ public record Exchange(OpenIddictRequest Request) : IRequest<IActionResult>
 					}));
 			}
 
+			cancellationToken.ThrowIfCancellationRequested();
+
 			var identity = new ClaimsIdentity(result.Principal?.Claims,
 				authenticationType: TokenValidationParameters.DefaultAuthenticationType,
 				nameType: OpenIddictConstants.Claims.Name,
@@ -92,9 +113,9 @@ public record Exchange(OpenIddictRequest Request) : IRequest<IActionResult>
 				.SetClaim(OpenIddictConstants.Claims.Email, await userManager.GetEmailAsync(user))
 				.SetClaim(OpenIddictConstants.Claims.Name, await userManager.GetUserNameAsync(user))
 				.SetClaim(OpenIddictConstants.Claims.PreferredUsername, await userManager.GetUserNameAsync(user))
-				.SetClaims(OpenIddictConstants.Claims.Role, [.. (await userManager.GetRolesAsync(user))]);
+				.SetClaims(OpenIddictConstants.Claims.Role, [.. await userManager.GetRolesAsync(user)]);
 
-			identity.SetDestinations(GetDestinations);
+			identity.SetDestinations(destinationsProvider.GetDestinations);
 
 			// Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
 			return new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
@@ -102,7 +123,7 @@ public record Exchange(OpenIddictRequest Request) : IRequest<IActionResult>
 		}
 
 		private async Task<IActionResult> HandleClientCredentialsAsync(OpenIddictRequest request,
-																	   CancellationToken cancellationToken)
+		                                                               CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrEmpty(request.ClientId))
 			{
@@ -110,7 +131,7 @@ public record Exchange(OpenIddictRequest Request) : IRequest<IActionResult>
 			}
 
 			var application = await manager.FindByClientIdAsync(request.ClientId, cancellationToken)
-							  ?? throw new InvalidOperationException("The application cannot be found.");
+			                  ?? throw new InvalidOperationException("The application cannot be found.");
 
 			var identity = new ClaimsIdentity(TokenValidationParameters.DefaultAuthenticationType,
 				OpenIddictConstants.Claims.Name, OpenIddictConstants.Claims.Role);
@@ -120,53 +141,13 @@ public record Exchange(OpenIddictRequest Request) : IRequest<IActionResult>
 			identity.SetClaim(OpenIddictConstants.Claims.Name,
 				await manager.GetDisplayNameAsync(application, cancellationToken));
 
-			identity.SetDestinations(GetDestinations);
+			identity.SetScopes(request.GetScopes());
+			identity.SetResources(await scopeManager.ListResourcesAsync(identity.GetScopes(), cancellationToken)
+				.ToListAsync(cancellationToken));
+			identity.SetDestinations(destinationsProvider.GetDestinations);
 
 			return new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
 				new ClaimsPrincipal(identity));
 		}
-	}
-
-	private static IEnumerable<string> GetDestinations(Claim claim)
-	{
-		// Note: by default, claims are NOT automatically included in the access and identity tokens.
-		// To allow OpenIddict to serialize them, you must attach them a destination, that specifies
-		// whether they should be included in access tokens, in identity tokens or in both.
-
-		switch (claim.Type)
-		{
-			case OpenIddictConstants.Claims.Name or OpenIddictConstants.Claims.PreferredUsername:
-				yield return OpenIddictConstants.Destinations.AccessToken;
-
-				if (HasScope(OpenIddictConstants.Scopes.Profile))
-					yield return OpenIddictConstants.Destinations.IdentityToken;
-
-				yield break;
-
-			case OpenIddictConstants.Claims.Email:
-				yield return OpenIddictConstants.Destinations.AccessToken;
-
-				if (HasScope(OpenIddictConstants.Scopes.Email))
-					yield return OpenIddictConstants.Destinations.IdentityToken;
-
-				yield break;
-
-			case OpenIddictConstants.Claims.Role:
-				yield return OpenIddictConstants.Destinations.AccessToken;
-
-				if (HasScope(OpenIddictConstants.Scopes.Roles))
-					yield return OpenIddictConstants.Destinations.IdentityToken;
-
-				yield break;
-
-			// Never include the security stamp in the access and identity tokens, as it's a secret value.
-			case "AspNet.Identity.SecurityStamp": yield break;
-
-			default:
-				yield return OpenIddictConstants.Destinations.AccessToken;
-				yield break;
-		}
-
-		bool HasScope(string role) => claim.Subject is not null && claim.Subject.HasScope(role);
 	}
 }

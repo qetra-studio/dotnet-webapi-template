@@ -1,14 +1,12 @@
 ﻿using FluentValidation;
 using JetBrains.Annotations;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RichWebApi.Entities.Identity;
 using RichWebApi.Enums;
 using RichWebApi.Extensions;
 using RichWebApi.Models;
-using RichWebApi.Services.Jwt;
 
 namespace RichWebApi.Handlers.Auth;
 
@@ -23,7 +21,6 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 	[UsedImplicitly]
 	internal class LoginWithCredentialsHandler(
 		SignInManager<RichWebApiUser> signInManager,
-		IJwtTokenIssuer jwtTokenIssuer,
 		UserManager<RichWebApiUser> userManager)
 		: IRequestHandler<LoginWithCredentials, IActionResult>
 	{
@@ -51,34 +48,48 @@ public record LoginWithCredentials(LoginDto Credentials) : IRequest<IActionResul
 					]
 				});
 			}
-
-			var result = await signInManager.CheckPasswordSignInAsync(user, request.Credentials.Password, true);
-
+			
 			if (await userManager.GetTwoFactorEnabledAsync(user))
 			{
-				var jwt = await jwtTokenIssuer.IssueAuthActionTokenAsync(user, RichWebApiAuthActions.Login, cancellationToken);
-				return new ObjectResult(new AuthActionRequiredDto
+				if (string.IsNullOrEmpty(request.Credentials.TwoFactorToken))
 				{
-					ErrorCode = "two_factor_required",
-					Message = "Complete 2FA in order to continue.",
-					AccessToken = jwt.Token,
-					TokenType = jwt.Type,
-					ExpiresIn = (int)jwt.ExpiresIn.TotalSeconds
-				})
+					return new UnauthorizedObjectResult(new AuthErrorResponseDto
+					{
+						Errors =
+						[
+							new AuthErrorDto
+							{
+								ErrorCode = "invalid_token",
+								Message = "Provided token is invalid."
+							}
+						]
+					});
+				}
+				
+				var isValidTwoFactorToken = await userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider,
+					request.Credentials.TwoFactorToken);
+
+				if (!isValidTwoFactorToken)
 				{
-					StatusCode = StatusCodes.Status302Found
-				};
+					return new UnauthorizedObjectResult(new AuthErrorResponseDto
+					{
+						Errors =
+						[
+							new AuthErrorDto
+							{
+								ErrorCode = "invalid_token",
+								Message = "Provided token is invalid."
+							}
+						]
+					});
+				}
 			}
+			
+			var result = await signInManager.PasswordSignInAsync(user, request.Credentials.Password, request.Credentials.RememberMe, true);
 
 			if (result.Succeeded)
 			{
-				var jwt = await jwtTokenIssuer.IssueUserTokenAsync(user, cancellationToken);
-				return new ObjectResult(new AuthSuccessDto
-				{
-					AccessToken = jwt.Token,
-					TokenType = jwt.Type,
-					ExpiresIn = (int)jwt.ExpiresIn.TotalSeconds
-				});
+				return new OkResult();
 			}
 
 			if (result.IsLockedOut)

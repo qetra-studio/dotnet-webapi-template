@@ -4,9 +4,6 @@ namespace RichWebApi.Authorization.Requirements;
 
 public static class AuthorizationPolicyBuilderExtensions
 {
-	public static AuthorizationPolicyBuilder RequireSecurityStamp(this AuthorizationPolicyBuilder builder)
-		=> builder.AddRequirements(new SecurityStampRequirement());
-
 	public static AuthorizationPolicyBuilder RequireNamedAssertion(this AuthorizationPolicyBuilder builder, Lazy<string> name, Func<AuthorizationHandlerContext, ValueTask<bool>> assertion)
 		=> builder.AddRequirements(new NamedAssertionRequirement(name, assertion));
 }

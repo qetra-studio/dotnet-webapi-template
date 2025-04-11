@@ -10,7 +10,6 @@ using RichWebApi.Enums;
 using RichWebApi.Extensions;
 using RichWebApi.Models;
 using RichWebApi.Services;
-using RichWebApi.Services.Jwt;
 
 namespace RichWebApi.Handlers.Mfa;
 
@@ -21,7 +20,6 @@ public record SetupMfa : IRequest<IActionResult>
 
 	[UsedImplicitly]
 	internal class SetupMfaHandler(IRichWebApiUserContextAccessor accessor,
-								   IJwtTokenIssuer jwtTokenIssuer,
 								   UserManager<RichWebApiUser> manager,
 								   IOptionsMonitor<MfaConfig> config) : IRequestHandler<SetupMfa, IActionResult>
 	{
@@ -36,7 +34,7 @@ public record SetupMfa : IRequest<IActionResult>
 			var key = await manager.GetAuthenticatorKeyAsync(user);
 			if (!string.IsNullOrEmpty(key))
 			{
-				return await MfaResponse(user, key, cancellationToken);
+				return MfaResponse(user, key);
 			}
 			var result = await manager.ResetAuthenticatorKeyAsync(user);
 			if (!result.Succeeded)
@@ -46,10 +44,10 @@ public record SetupMfa : IRequest<IActionResult>
 
 			key = await manager.GetAuthenticatorKeyAsync(user);
 
-			return await MfaResponse(user, key!, cancellationToken);
+			return MfaResponse(user, key!);
 		}
 
-		private async Task<IActionResult> MfaResponse(RichWebApiUser user, string key, CancellationToken cancellationToken)
+		private IActionResult MfaResponse(RichWebApiUser user, string key)
 		{
 			if (string.IsNullOrEmpty(user.Email))
 			{
@@ -60,14 +58,10 @@ public record SetupMfa : IRequest<IActionResult>
 			var issuer = Uri.EscapeDataString(configValue.Issuer);
 			var uri =
 				$"otpauth://totp/{issuer}:{Uri.EscapeDataString(user.Email)}?secret={key}&issuer={issuer}&digits={configValue.Digits}";
-			var jwt = await jwtTokenIssuer.IssueAuthActionTokenAsync(user, RichWebApiAuthActions.SetupMfa, cancellationToken);
 			return new ObjectResult(new MfaSetupDto
 			{
 				Key = key,
 				Uri = uri,
-				AccessToken = jwt.Token,
-				ExpiresIn = (int)jwt.ExpiresIn.TotalSeconds,
-				TokenType = jwt.Type
 			});
 		}
 	}

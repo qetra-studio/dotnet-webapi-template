@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RichWebApi.Authorization;
 using RichWebApi.Models;
 using RichWebApi.Operations;
 using RichWebApi.Utilities.Paging;
@@ -9,7 +10,7 @@ namespace RichWebApi.Controllers;
 
 [ApiController]
 [Route("weatherForecasts")]
-[Authorize(Policy = "weather")]
+[Scope("weather")]
 public class WeatherForecastController(IMediator mediator) : ControllerBase
 {
 	[HttpGet(Name = "GetWeatherForecasts")]

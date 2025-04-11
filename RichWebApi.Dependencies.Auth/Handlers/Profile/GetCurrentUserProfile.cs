@@ -4,7 +4,6 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using RichWebApi.Mappers;
 using RichWebApi.Models;
-using RichWebApi.Persistence;
 using RichWebApi.Services;
 
 namespace RichWebApi.Handlers.Profile;

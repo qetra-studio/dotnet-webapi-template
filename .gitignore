@@ -7,3 +7,4 @@ node_modules
 vs2022/*.zip
 *.sln.DotSettings
 **/.DS_Store
+scripts/import-postman-dev.js

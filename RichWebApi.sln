@@ -47,6 +47,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{C48A
 		scripts\remove-last-migration.ps1 = scripts\remove-last-migration.ps1
 		scripts\squash-migrations.ps1 = scripts\squash-migrations.ps1
 		scripts\update-db.ps1 = scripts\update-db.ps1
+		scripts\import-postman.js = scripts\import-postman.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{40F2321C-99B8-4068-ABED-739FBEE79E21}"
