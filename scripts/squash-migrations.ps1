@@ -4,9 +4,9 @@
 ####################################################################################################
 # Script-wide constants ############################################################################
 ####################################################################################################
-$solutionFileName       = "EHRv2.Backend.sln"
-$dataProjectFileName    = "EHRv2.Database.Migrations.csproj"
-$startupProjectFileName = "EHRv2.Backend.csproj"
+$solutionFileName       = "RichWebApi.sln"
+$dataProjectFileName    = "RichWebApi.Dependencies.Database.Migrations.csproj"
+$startupProjectFileName = "RichWebApi.Application.csproj"
 $migrationsFolderName   = "Migrations"
 $rootFolder             = $null
 $migrationsFolder       = $null
